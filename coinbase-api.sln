@@ -1,0 +1,56 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.6.30114.105
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LD.Coinbase.Api", "src\LD.Coinbase.Api\LD.Coinbase.Api.csproj", "{8532D0A4-F8C5-4CB6-BEAD-256024DBAF0E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.LD.Coinbase.Api", "test\Test.LD.Coinbase.Api\Test.LD.Coinbase.Api.csproj", "{A712FE06-245C-4AE2-8330-A5AD1B6C1E19}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{05A5A108-B782-4516-92F4-716DC507C2A8}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\ci.yml = .github\workflows\ci.yml
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8532D0A4-F8C5-4CB6-BEAD-256024DBAF0E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8532D0A4-F8C5-4CB6-BEAD-256024DBAF0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8532D0A4-F8C5-4CB6-BEAD-256024DBAF0E}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{8532D0A4-F8C5-4CB6-BEAD-256024DBAF0E}.Debug|x64.Build.0 = Debug|Any CPU
+		{8532D0A4-F8C5-4CB6-BEAD-256024DBAF0E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{8532D0A4-F8C5-4CB6-BEAD-256024DBAF0E}.Debug|x86.Build.0 = Debug|Any CPU
+		{8532D0A4-F8C5-4CB6-BEAD-256024DBAF0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8532D0A4-F8C5-4CB6-BEAD-256024DBAF0E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8532D0A4-F8C5-4CB6-BEAD-256024DBAF0E}.Release|x64.ActiveCfg = Release|Any CPU
+		{8532D0A4-F8C5-4CB6-BEAD-256024DBAF0E}.Release|x64.Build.0 = Release|Any CPU
+		{8532D0A4-F8C5-4CB6-BEAD-256024DBAF0E}.Release|x86.ActiveCfg = Release|Any CPU
+		{8532D0A4-F8C5-4CB6-BEAD-256024DBAF0E}.Release|x86.Build.0 = Release|Any CPU
+		{A712FE06-245C-4AE2-8330-A5AD1B6C1E19}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A712FE06-245C-4AE2-8330-A5AD1B6C1E19}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A712FE06-245C-4AE2-8330-A5AD1B6C1E19}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A712FE06-245C-4AE2-8330-A5AD1B6C1E19}.Debug|x64.Build.0 = Debug|Any CPU
+		{A712FE06-245C-4AE2-8330-A5AD1B6C1E19}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A712FE06-245C-4AE2-8330-A5AD1B6C1E19}.Debug|x86.Build.0 = Debug|Any CPU
+		{A712FE06-245C-4AE2-8330-A5AD1B6C1E19}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A712FE06-245C-4AE2-8330-A5AD1B6C1E19}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A712FE06-245C-4AE2-8330-A5AD1B6C1E19}.Release|x64.ActiveCfg = Release|Any CPU
+		{A712FE06-245C-4AE2-8330-A5AD1B6C1E19}.Release|x64.Build.0 = Release|Any CPU
+		{A712FE06-245C-4AE2-8330-A5AD1B6C1E19}.Release|x86.ActiveCfg = Release|Any CPU
+		{A712FE06-245C-4AE2-8330-A5AD1B6C1E19}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {80595D02-224A-45E4-B15B-125EE3FE94D9}
+	EndGlobalSection
+EndGlobal
