@@ -3,11 +3,13 @@
     <PropertyGroup>
         <TargetFramework>net5.0</TargetFramework>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <RepositoryUrl>https://github.com/ldalonzo/coinbase-api</RepositoryUrl>
-        <Company />
-        <Authors>Leonardo D'Alonzo</Authors>
-        <Product />
+        <PackageId>LDZ.Coinbase.Api</PackageId>
         <RepositoryType>git</RepositoryType>
+        <RepositoryUrl>https://github.com/ldalonzo/coinbase-api</RepositoryUrl>
+        <Authors>Leonardo D'Alonzo</Authors>
+        <Product>.NET client for the Coinbase Pro REST API</Product>
+        <Description>A .NET client for the Coinbase Pro REST API</Description>
+        <Company />
     </PropertyGroup>
 
     <ItemGroup>

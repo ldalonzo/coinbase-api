@@ -3,6 +3,9 @@ name: CI
 on: [ push ]
 
 env:
+  Major: 1
+  Minor: 0
+  Patch: 0
   BuildConfiguration: 'Release'
 
 jobs:
@@ -12,6 +15,20 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        clean: true        
+
+    - name: Set Version
+      if: ${{ github.ref == 'refs/heads/master' }}
+      run: |
+        echo "version=$Major.$Minor.$Patch" >> $GITHUB_ENV
+        echo "assembly_version=$Major.$Minor.$Patch.$GITHUB_RUN_NUMBER" >> $GITHUB_ENV
+
+    - name: Set Version
+      if: ${{ github.ref != 'refs/heads/master' }}
+      run: |
+        echo "version=$Major.$Minor.$Patch-preview" >> $GITHUB_ENV
+        echo "assembly_version=$Major.$Minor.$Patch.$GITHUB_RUN_NUMBER" >> $GITHUB_ENV
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
@@ -21,13 +38,20 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
 
-    - name: Test
-      run: dotnet test --no-restore --configuration $BuildConfiguration
-
     - name: Build
-      run: dotnet build --no-restore --configuration $BuildConfiguration
+      run: |
+        dotnet build --no-restore --configuration $BuildConfiguration -p:Version=${{ env.version }} -p:AssemblyVersion=${{ env.assembly_version }}
+
+    - name: Test
+      run: dotnet test --configuration $BuildConfiguration --no-build --collect:"XPlat Code Coverage"
+
+    - name: NuGet push nuget.org
+      if: ${{ github.ref == 'refs/heads/develop' }}
+      run: |
+        dotnet nuget push $GITHUB_WORKSPACE/src/LD.Coinbase.Api/bin/$BuildConfiguration/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate --source https://api.nuget.org/v3/index.json
 
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v2.2.2
       with:
+        name: coinbase-api.${{ env.assembly_version }}
         path: '**/*.nupkg'
