@@ -40,6 +40,8 @@ namespace LDZ.Coinbase.Test.Integration
             var actual = await _fixture.MarketDataClient.GetTradesAsync(productId);
 
             Assert.NotEmpty(actual);
+            Assert.True(actual.After.HasValue);
+            Assert.True(actual.Before.HasValue);
         }
     }
 }

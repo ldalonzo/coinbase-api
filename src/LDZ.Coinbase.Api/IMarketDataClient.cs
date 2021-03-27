@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using LDZ.Coinbase.Api.Model;
 using LDZ.Coinbase.Api.Model.MarketData;
 
 namespace LDZ.Coinbase.Api
@@ -24,6 +25,6 @@ namespace LDZ.Coinbase.Api
         /// <summary>
         /// List the latest <see cref="Trade"/>s for a <see cref="Product"/>.
         /// </summary>
-        Task<IEnumerable<Trade>> GetTradesAsync(string productId, CancellationToken cancellationToken = default);
+        Task<PaginatedResult<Trade>> GetTradesAsync(string productId, CancellationToken cancellationToken = default);
     }
 }

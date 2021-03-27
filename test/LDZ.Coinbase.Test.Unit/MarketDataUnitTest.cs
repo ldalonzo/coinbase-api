@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoFixture.Xunit2;
 using LDZ.Coinbase.Api;
 using LDZ.Coinbase.Api.DependencyInjection;
 using LDZ.Coinbase.Api.Model.MarketData;
@@ -51,18 +53,28 @@ namespace LDZ.Coinbase.Test.Unit
         }
 
         [Theory]
-        [InlineData("BTC-USD")]
-        public async Task GetTrades(string productId)
+        [InlineAutoData("BTC-USD")]
+        public async Task GetTrades(string productId, int before, int after)
         {
             var mockHttp = new MockHttpMessageHandler();
             mockHttp
                 .When($"https://api.pro.coinbase.com/products/{productId}/trades")
-                .Respond("application/json", await File.ReadAllTextAsync($"TestData/products_{productId}_trades.json"));
+                .Respond(
+                    new List<KeyValuePair<string, string>>
+                    {
+                        new KeyValuePair<string, string>("CB-AFTER", $"{after}"),
+                        new KeyValuePair<string, string>("CB-BEFORE", $"{before}")
+                    },
+                    "application/json",
+                    await File.ReadAllTextAsync($"TestData/products_{productId}_trades.json"));
 
             var client = CreateClient(mockHttp);
             var actual = await client.GetTradesAsync(productId);
 
             Assert.NotEmpty(actual);
+            Assert.Equal(after, actual.After);
+            Assert.Equal(before, actual.Before);
+
             var actualTrade = actual.FirstOrDefault(a => a.TradeId == 73);
             Assert.Equal(TradeSide.Sell, actualTrade.Side);
             Assert.Equal(100m, actualTrade.Price);

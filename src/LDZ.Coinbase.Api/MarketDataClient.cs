@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using LDZ.Coinbase.Api.Json.Serialization;
 using LDZ.Coinbase.Api.Model;
 using LDZ.Coinbase.Api.Model.MarketData;
+using LDZ.Coinbase.Api.Net.Http.Headers;
 
 namespace LDZ.Coinbase.Api
 {
@@ -46,7 +47,7 @@ namespace LDZ.Coinbase.Api
             return await JsonSerializer.DeserializeAsync<Product>(await response.Content.ReadAsStreamAsync(cancellationToken), _options, cancellationToken);
         }
 
-        public async Task<IEnumerable<Trade>> GetTradesAsync(string productId, CancellationToken cancellationToken = default)
+        public async Task<PaginatedResult<Trade>> GetTradesAsync(string productId, CancellationToken cancellationToken = default)
         {
             using var client = _factory.CreateClient(ClientNames.MarketData);
 
@@ -56,7 +57,22 @@ namespace LDZ.Coinbase.Api
             var response = await client.GetAsync(requestUri, cancellationToken);
             response.EnsureSuccessStatusCode();
 
-            return await JsonSerializer.DeserializeAsync<IEnumerable<Trade>>(await response.Content.ReadAsStreamAsync(cancellationToken), _options, cancellationToken);
+            var result = new PaginatedResult<Trade>
+            {
+                Value = await JsonSerializer.DeserializeAsync<IEnumerable<Trade>>(await response.Content.ReadAsStreamAsync(cancellationToken), _options, cancellationToken),
+            };
+
+            if (response.Headers.TryParseInt(HeaderNames.After, out var after))
+            {
+                result.After = after;
+            }
+
+            if (response.Headers.TryParseInt(HeaderNames.Before, out var before))
+            {
+                result.Before = before;
+            }
+
+            return result;
         }
     }
 }
