@@ -27,7 +27,7 @@ namespace LDZ.Coinbase.Api.Net.Http
             {
                 if (lastRequestTime != null)
                 {
-                    var earliestTime = lastRequestTime.Value.Add(TimeSpan.FromMilliseconds(1_000 / MaxCallsPerSecond));
+                    var earliestTime = lastRequestTime.Value.Add(TimeSpan.FromMilliseconds(1_000d / MaxCallsPerSecond));
                     var delta = earliestTime - DateTime.UtcNow;
                     if (delta.Ticks > 0)
                     {

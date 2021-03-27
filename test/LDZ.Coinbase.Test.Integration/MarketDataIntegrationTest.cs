@@ -1,4 +1,7 @@
+using System.Linq;
 using System.Threading.Tasks;
+using LDZ.Coinbase.Api.Model.MarketData;
+using Shouldly;
 using Xunit;
 
 namespace LDZ.Coinbase.Test.Integration
@@ -42,6 +45,18 @@ namespace LDZ.Coinbase.Test.Integration
             Assert.NotEmpty(actual);
             Assert.True(actual.After.HasValue);
             Assert.True(actual.Before.HasValue);
+        }
+
+        [Theory]
+        [InlineData("BTC-USD")]
+        public async Task GetTradesWithAfterCursor(string productId)
+        {
+            var page1 = await _fixture.MarketDataClient.GetTradesAsync(productId);
+            var page2 = await _fixture.MarketDataClient.GetTradesAsync(productId, page1.After);
+
+            Assert.NotEmpty(page1);
+            Assert.NotEmpty(page2);
+            page1.Intersect(page2, new TradeTradeIdEqualityComparer()).ShouldBeEmpty();
         }
     }
 }
