@@ -8,17 +8,14 @@ namespace LD.Coinbase.Api.DependencyInjection
 {
     public static class ServiceCollectionExtensions
     {
-        public static IServiceCollection AddMarketDataClient(this IServiceCollection services)
+        public static IServiceCollection AddMarketDataClient(this IServiceCollection services, Action<OptionsBuilder<CoinbaseClientOptions>> configure)
         {
             services
                 .AddTransient<IMarketDataClient, MarketDataClient>()
                 .AddSingleton<ThrottlingPolicy>()
                 .AddTransient<ThrottlingPolicyHandler>();
 
-            services.AddOptions<CoinbaseClientOptions>().Configure(o =>
-            {
-                o.BaseAddress = new Uri("https://api.pro.coinbase.com", UriKind.Absolute);
-            });
+            configure(services.AddOptions<CoinbaseClientOptions>());
 
             services
                 .AddHttpClient(ClientNames.MarketData, (provider, client) =>
@@ -30,5 +27,11 @@ namespace LD.Coinbase.Api.DependencyInjection
 
             return services;
         }
+
+        public static IServiceCollection AddMarketDataClient(this IServiceCollection services) => services
+            .AddMarketDataClient(builder => builder.Configure(o =>
+            {
+                o.BaseAddress = new Uri("https://api.pro.coinbase.com", UriKind.Absolute);
+            }));
     }
 }

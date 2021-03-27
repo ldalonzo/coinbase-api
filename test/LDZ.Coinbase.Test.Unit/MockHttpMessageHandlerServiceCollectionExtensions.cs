@@ -6,7 +6,7 @@ using Microsoft.Extensions.Options;
 using Moq;
 using RichardSzalay.MockHttp;
 
-namespace Test.LD.Coinbase.Api
+namespace LDZ.Coinbase.Test.Unit
 {
     public static class MockHttpMessageHandlerServiceCollectionExtensions
     {

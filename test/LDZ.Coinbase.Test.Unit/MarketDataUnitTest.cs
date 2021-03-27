@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using RichardSzalay.MockHttp;
 using Xunit;
 
-namespace Test.LD.Coinbase.Api
+namespace LDZ.Coinbase.Test.Unit
 {
     public class MarketDataUnitTest
     {
