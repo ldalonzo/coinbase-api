@@ -16,5 +16,10 @@ namespace LD.Coinbase.Api
         /// Get a list of available currency pairs for trading.
         /// </summary>
         Task<IEnumerable<Product>> GetProductsAsync(CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Get market data for a specific currency pair.
+        /// </summary>
+        Task<Product> GetProductAsync(string productId, CancellationToken cancellationToken = default);
     }
 }

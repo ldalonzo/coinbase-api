@@ -31,5 +31,15 @@ namespace LD.Coinbase.Api
 
             return await JsonSerializer.DeserializeAsync<IEnumerable<Product>>(await response.Content.ReadAsStreamAsync(cancellationToken), _options, cancellationToken);
         }
+
+        public async Task<Product> GetProductAsync(string productId, CancellationToken cancellationToken = default)
+        {
+            using var client = _factory.CreateClient(ClientNames.MarketData);
+
+            var response = await client.GetAsync(new Uri($"/products/{productId}", UriKind.Relative), cancellationToken);
+            response.EnsureSuccessStatusCode();
+
+            return await JsonSerializer.DeserializeAsync<Product>(await response.Content.ReadAsStreamAsync(cancellationToken), _options, cancellationToken);
+        }
     }
 }
