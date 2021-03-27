@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\LD.Coinbase.Api\LD.Coinbase.Api.csproj" />
+    <ProjectReference Include="..\..\src\LDZ.Coinbase.Api\LDZ.Coinbase.Api.csproj" />
   </ItemGroup>
 
 </Project>

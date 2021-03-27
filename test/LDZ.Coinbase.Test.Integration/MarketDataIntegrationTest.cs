@@ -32,5 +32,14 @@ namespace LDZ.Coinbase.Test.Integration
             Assert.NotNull(actual);
             Assert.Equal(productId, actual.Id);
         }
+
+        [Theory]
+        [InlineData("BTC-USD")]
+        public async Task GetTrades(string productId)
+        {
+            var actual = await _fixture.MarketDataClient.GetTradesAsync(productId);
+
+            Assert.NotEmpty(actual);
+        }
     }
 }

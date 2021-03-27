@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
-namespace LD.Coinbase.Api.Net.Http
+namespace LDZ.Coinbase.Api.Net.Http
 {
     internal class ThrottlingPolicy
     {

@@ -1,7 +1,10 @@
+using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
-using LD.Coinbase.Api;
-using LD.Coinbase.Api.DependencyInjection;
+using LDZ.Coinbase.Api;
+using LDZ.Coinbase.Api.DependencyInjection;
+using LDZ.Coinbase.Api.Model.MarketData;
 using Microsoft.Extensions.DependencyInjection;
 using RichardSzalay.MockHttp;
 using Xunit;
@@ -45,6 +48,26 @@ namespace LDZ.Coinbase.Test.Unit
             Assert.Equal(1E-2m, actual.QuoteIncrement);
             Assert.Equal(1E-3m, actual.BaseMinSize);
             Assert.Equal(280m, actual.BaseMaxSize);
+        }
+
+        [Theory]
+        [InlineData("BTC-USD")]
+        public async Task GetTrades(string productId)
+        {
+            var mockHttp = new MockHttpMessageHandler();
+            mockHttp
+                .When($"https://api.pro.coinbase.com/products/{productId}/trades")
+                .Respond("application/json", await File.ReadAllTextAsync($"TestData/products_{productId}_trades.json"));
+
+            var client = CreateClient(mockHttp);
+            var actual = await client.GetTradesAsync(productId);
+
+            Assert.NotEmpty(actual);
+            var actualTrade = actual.FirstOrDefault(a => a.TradeId == 73);
+            Assert.Equal(TradeSide.Sell, actualTrade.Side);
+            Assert.Equal(100m, actualTrade.Price);
+            Assert.Equal(0.01m, actualTrade.Size);
+            Assert.Equal(DateTime.Parse("2014-11-07T01:08:43.642366Z"), actualTrade.Time);
         }
 
         private static IMarketDataClient CreateClient(MockHttpMessageHandler mockHttp)

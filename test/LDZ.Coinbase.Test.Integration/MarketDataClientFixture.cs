@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
-using LD.Coinbase.Api;
-using LD.Coinbase.Api.DependencyInjection;
+using LDZ.Coinbase.Api;
+using LDZ.Coinbase.Api.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 

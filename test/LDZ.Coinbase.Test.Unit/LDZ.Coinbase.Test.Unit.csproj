@@ -22,7 +22,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\src\LD.Coinbase.Api\LD.Coinbase.Api.csproj" />
+        <ProjectReference Include="..\..\src\LDZ.Coinbase.Api\LDZ.Coinbase.Api.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -31,6 +31,9 @@
         </None>
         <None Update="TestData\products_BTC-USD.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="TestData\products_BTC-USD_trades.json">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>
 

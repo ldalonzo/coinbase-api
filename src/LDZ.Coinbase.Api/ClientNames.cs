@@ -1,6 +1,6 @@
-﻿namespace LD.Coinbase.Api
+﻿namespace LDZ.Coinbase.Api
 {
-    public static class ClientNames
+    internal static class ClientNames
     {
         public const string MarketData = "MarketData";
     }

@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LD.Coinbase.Api.Net.Http
+namespace LDZ.Coinbase.Api.Net.Http
 {
     internal class ThrottlingPolicyHandler : DelegatingHandler
     {

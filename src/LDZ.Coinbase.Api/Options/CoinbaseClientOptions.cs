@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LD.Coinbase.Api.Options
+namespace LDZ.Coinbase.Api.Options
 {
     public class CoinbaseClientOptions
     {

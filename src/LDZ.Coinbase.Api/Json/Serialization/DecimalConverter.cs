@@ -2,7 +2,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace LD.Coinbase.Api.Json.Serialization
+namespace LDZ.Coinbase.Api.Json.Serialization
 {
     internal class DecimalConverter : JsonConverter<decimal>
     {

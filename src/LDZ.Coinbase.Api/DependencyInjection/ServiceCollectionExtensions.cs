@@ -1,10 +1,10 @@
 ﻿using System;
-using LD.Coinbase.Api.Net.Http;
-using LD.Coinbase.Api.Options;
+using LDZ.Coinbase.Api.Net.Http;
+using LDZ.Coinbase.Api.Options;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
-namespace LD.Coinbase.Api.DependencyInjection
+namespace LDZ.Coinbase.Api.DependencyInjection
 {
     public static class ServiceCollectionExtensions
     {

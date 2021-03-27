@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace LD.Coinbase.Api.Model.MarketData
+namespace LDZ.Coinbase.Api.Model.MarketData
 {
     public class Product
     {

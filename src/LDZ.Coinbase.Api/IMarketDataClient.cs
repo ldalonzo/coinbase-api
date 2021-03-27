@@ -1,10 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using LD.Coinbase.Api.Model;
-using LD.Coinbase.Api.Model.MarketData;
+using LDZ.Coinbase.Api.Model.MarketData;
 
-namespace LD.Coinbase.Api
+namespace LDZ.Coinbase.Api
 {
     /// <summary>
     /// The Market Data API is an unauthenticated set of endpoints for retrieving market data. These endpoints provide snapshots of market data.
@@ -21,5 +20,10 @@ namespace LD.Coinbase.Api
         /// Get market data for a specific currency pair.
         /// </summary>
         Task<Product> GetProductAsync(string productId, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// List the latest <see cref="Trade"/>s for a <see cref="Product"/>.
+        /// </summary>
+        Task<IEnumerable<Trade>> GetTradesAsync(string productId, CancellationToken cancellationToken = default);
     }
 }
