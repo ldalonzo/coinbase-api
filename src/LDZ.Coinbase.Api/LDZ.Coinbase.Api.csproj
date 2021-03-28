@@ -12,6 +12,7 @@
         <Company />
         <Nullable>annotations</Nullable>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
+        <Copyright>Leonardo D'Alonzo</Copyright>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
