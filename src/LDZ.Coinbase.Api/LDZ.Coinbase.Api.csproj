@@ -11,6 +11,7 @@
         <Description>A .NET client for the Coinbase Pro REST API</Description>
         <Company />
         <Nullable>annotations</Nullable>
+        <PackageLicenseFile>LICENSE</PackageLicenseFile>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -26,7 +27,10 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\LDZ.Coinbase.Api.Model\LDZ.Coinbase.Api.Model.csproj" />
+      <None Include="..\..\LICENSE">
+        <Pack>True</Pack>
+        <PackagePath></PackagePath>
+      </None>
     </ItemGroup>
 
 </Project>
