@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using LDZ.Coinbase.Api.Model.MarketData;
@@ -63,7 +64,7 @@ namespace LDZ.Coinbase.Test.Integration
         [InlineData("BTC-USD")]
         public async Task GetProductOrderBook(string productId)
         {
-            var actual = await _fixture.MarketDataClient.GetProductOrderBook(productId);
+            var actual = await _fixture.MarketDataClient.GetProductOrderBookAsync(productId);
 
             actual.Sequence.ShouldBePositive();
 
@@ -82,7 +83,7 @@ namespace LDZ.Coinbase.Test.Integration
         [InlineData("BTC-USD")]
         public async Task GetProductOrderBookLevel2(string productId)
         {
-            var actual = await _fixture.MarketDataClient.GetProductOrderBook(productId, AggregatedProductOrderBookLevel.LevelTwo);
+            var actual = await _fixture.MarketDataClient.GetProductOrderBookAsync(productId, AggregatedProductOrderBookLevel.LevelTwo);
 
             actual.Sequence.ShouldBePositive();
 
@@ -91,6 +92,15 @@ namespace LDZ.Coinbase.Test.Integration
 
             actual.Asks.ShouldNotBeEmpty();
             actual.Asks.Count().ShouldBe(50);
+        }
+
+        [Fact]
+        public async Task GetTime()
+        {
+            var actual = await _fixture.MarketDataClient.GetTimeAsync();
+
+            actual.Epoch.ShouldBePositive();
+            actual.Iso.Date.ShouldBe(DateTime.Today.Date);
         }
     }
 }

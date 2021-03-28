@@ -72,7 +72,7 @@ namespace LDZ.Coinbase.Api
                 await JsonSerializer.DeserializeAsync<IEnumerable<Trade>>(await response.Content.ReadAsStreamAsync(cancellationToken), _options, cancellationToken));
         }
 
-        public async Task<AggregatedProductOrderBook> GetProductOrderBook(string productId, AggregatedProductOrderBookLevel level = AggregatedProductOrderBookLevel.LevelOne, CancellationToken cancellationToken = default)
+        public async Task<AggregatedProductOrderBook> GetProductOrderBookAsync(string productId, AggregatedProductOrderBookLevel level = AggregatedProductOrderBookLevel.LevelOne, CancellationToken cancellationToken = default)
         {
             using var client = _factory.CreateClient(ClientNames.MarketData);
 
@@ -87,6 +87,16 @@ namespace LDZ.Coinbase.Api
             response.EnsureSuccessStatusCode();
 
             return await JsonSerializer.DeserializeAsync<AggregatedProductOrderBook>(await response.Content.ReadAsStreamAsync(cancellationToken), _options, cancellationToken);
+        }
+
+        public async Task<ApiServerTime> GetTimeAsync(CancellationToken cancellationToken = default)
+        {
+            using var client = _factory.CreateClient(ClientNames.MarketData);
+
+            var response = await client.GetAsync(new Uri("/time", UriKind.Relative), cancellationToken);
+            response.EnsureSuccessStatusCode();
+
+            return await JsonSerializer.DeserializeAsync<ApiServerTime>(await response.Content.ReadAsStreamAsync(cancellationToken), cancellationToken: cancellationToken);
         }
     }
 }

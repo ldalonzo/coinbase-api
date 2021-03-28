@@ -30,6 +30,11 @@ namespace LDZ.Coinbase.Api
         /// <summary>
         /// Get a list of open orders for a product. The amount of detail shown can be customized with the <paramref name="level"/> parameter.
         /// </summary>
-        Task<AggregatedProductOrderBook> GetProductOrderBook(string productId, AggregatedProductOrderBookLevel level = AggregatedProductOrderBookLevel.LevelOne, CancellationToken cancellationToken = default);
+        Task<AggregatedProductOrderBook> GetProductOrderBookAsync(string productId, AggregatedProductOrderBookLevel level = AggregatedProductOrderBookLevel.LevelOne, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Get the API server time.
+        /// </summary>
+        Task<ApiServerTime> GetTimeAsync(CancellationToken cancellationToken = default);
     }
 }

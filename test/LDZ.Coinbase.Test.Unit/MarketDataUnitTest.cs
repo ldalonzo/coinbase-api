@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using AutoFixture.Xunit2;
 using LDZ.Coinbase.Api;
@@ -21,7 +22,7 @@ namespace LDZ.Coinbase.Test.Unit
         {
             var mockHttp = new MockHttpMessageHandler();
             mockHttp
-                .When("https://api.pro.coinbase.com/products")
+                .When(HttpMethod.Get, "https://api.pro.coinbase.com/products")
                 .Respond("application/json", await File.ReadAllTextAsync("TestData/products.json"));
 
             var client = CreateClient(mockHttp);
@@ -36,7 +37,7 @@ namespace LDZ.Coinbase.Test.Unit
         {
             var mockHttp = new MockHttpMessageHandler();
             mockHttp
-                .When($"https://api.pro.coinbase.com/products/{productId}")
+                .When(HttpMethod.Get, $"https://api.pro.coinbase.com/products/{productId}")
                 .Respond("application/json", await File.ReadAllTextAsync($"TestData/products_{productId}.json"));
 
             var client = CreateClient(mockHttp);
@@ -59,7 +60,7 @@ namespace LDZ.Coinbase.Test.Unit
         {
             var mockHttp = new MockHttpMessageHandler();
             mockHttp
-                .When($"https://api.pro.coinbase.com/products/{productId}/trades")
+                .When(HttpMethod.Get, $"https://api.pro.coinbase.com/products/{productId}/trades")
                 .Respond(
                     new List<KeyValuePair<string, string>>
                     {
@@ -89,13 +90,13 @@ namespace LDZ.Coinbase.Test.Unit
         {
             var mockHttp = new MockHttpMessageHandler();
             mockHttp
-                .When($"https://api.pro.coinbase.com/products/{productId}/book")
+                .When(HttpMethod.Get, $"https://api.pro.coinbase.com/products/{productId}/book")
                 .Respond(
                     "application/json",
                     await File.ReadAllTextAsync($"TestData/products_{productId}_book.json"));
 
             var client = CreateClient(mockHttp);
-            var actual = await client.GetProductOrderBook(productId);
+            var actual = await client.GetProductOrderBookAsync(productId);
 
             actual.Sequence.ShouldBe(3);
 
@@ -116,13 +117,13 @@ namespace LDZ.Coinbase.Test.Unit
         {
             var mockHttp = new MockHttpMessageHandler();
             mockHttp
-                .When($"https://api.pro.coinbase.com/products/{productId}/book?level=2")
+                .When(HttpMethod.Get, $"https://api.pro.coinbase.com/products/{productId}/book?level=2")
                 .Respond(
                     "application/json",
                     await File.ReadAllTextAsync($"TestData/products_{productId}_book_level2.json"));
 
             var client = CreateClient(mockHttp);
-            var actual = await client.GetProductOrderBook(productId, AggregatedProductOrderBookLevel.LevelTwo);
+            var actual = await client.GetProductOrderBookAsync(productId, AggregatedProductOrderBookLevel.LevelTwo);
 
             actual.Sequence.ShouldBePositive();
 
@@ -131,6 +132,24 @@ namespace LDZ.Coinbase.Test.Unit
 
             actual.Asks.ShouldNotBeEmpty();
             actual.Asks.Count().ShouldBe(50);
+        }
+
+        [Fact]
+        public async Task GetTime()
+        {
+            var mockHttp = new MockHttpMessageHandler();
+            mockHttp
+                .When(HttpMethod.Get, "https://api.pro.coinbase.com/time")
+                .Respond(
+                    "application/json",
+                    await File.ReadAllTextAsync("TestData/time.json"));
+
+            var client = CreateClient(mockHttp);
+
+            var actual = await client.GetTimeAsync();
+
+            actual.Epoch.ShouldBe(1420674445.201m);
+            actual.Iso.ShouldBe(DateTime.Parse("2015-01-07T23:47:25.201Z"));
         }
 
         private static IMarketDataClient CreateClient(MockHttpMessageHandler mockHttp)
