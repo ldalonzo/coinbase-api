@@ -21,6 +21,7 @@ namespace LDZ.Coinbase.Api
             _options = new JsonSerializerOptions();
             _options.Converters.Add(new DecimalConverter());
             _options.Converters.Add(new TradeSideConverter());
+            _options.Converters.Add(new AggregatedOrderJsonConverter());
         }
 
         private readonly IHttpClientFactory _factory;
@@ -69,6 +70,16 @@ namespace LDZ.Coinbase.Api
             return PaginatedResultFactory.Create(
                 response.Headers,
                 await JsonSerializer.DeserializeAsync<IEnumerable<Trade>>(await response.Content.ReadAsStreamAsync(cancellationToken), _options, cancellationToken));
+        }
+
+        public async Task<AggregatedProductOrderBook> GetProductOrderBook(string productId, CancellationToken cancellationToken = default)
+        {
+            using var client = _factory.CreateClient(ClientNames.MarketData);
+
+            var response = await client.GetAsync(new Uri($"/products/{productId}/book", UriKind.Relative), cancellationToken);
+            response.EnsureSuccessStatusCode();
+
+            return await JsonSerializer.DeserializeAsync<AggregatedProductOrderBook>(await response.Content.ReadAsStreamAsync(cancellationToken), _options, cancellationToken);
         }
     }
 }

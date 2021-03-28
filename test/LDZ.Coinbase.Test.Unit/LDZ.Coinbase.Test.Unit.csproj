@@ -34,6 +34,9 @@
         <None Update="TestData\products_BTC-USD.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
+        <None Update="TestData\products_BTC-USD_book.json">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
         <None Update="TestData\products_BTC-USD_trades.json">
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>

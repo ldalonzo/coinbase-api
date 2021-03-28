@@ -5,14 +5,14 @@ using LDZ.Coinbase.Api.Model.MarketData;
 
 namespace LDZ.Coinbase.Api.Json.Serialization
 {
-    internal class TradeSideConverter : JsonConverter<TradeSide>
+    public class TradeSideConverter : JsonConverter<TradeSide>
     {
         public override TradeSide Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
             => reader.GetString() switch
             {
                 "buy" => TradeSide.Buy,
                 "sell" => TradeSide.Sell,
-                _ => throw new NotSupportedException()
+                _ => throw new JsonException()
             };
         
 

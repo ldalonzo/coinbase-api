@@ -9,6 +9,7 @@ using LDZ.Coinbase.Api.DependencyInjection;
 using LDZ.Coinbase.Api.Model.MarketData;
 using Microsoft.Extensions.DependencyInjection;
 using RichardSzalay.MockHttp;
+using Shouldly;
 using Xunit;
 
 namespace LDZ.Coinbase.Test.Unit
@@ -80,6 +81,33 @@ namespace LDZ.Coinbase.Test.Unit
             Assert.Equal(100m, actualTrade.Price);
             Assert.Equal(0.01m, actualTrade.Size);
             Assert.Equal(DateTime.Parse("2014-11-07T01:08:43.642366Z"), actualTrade.Time);
+        }
+
+        [Theory]
+        [InlineData("BTC-USD")]
+        public async Task GetProductOrderBook(string productId)
+        {
+            var mockHttp = new MockHttpMessageHandler();
+            mockHttp
+                .When($"https://api.pro.coinbase.com/products/{productId}/book")
+                .Respond(
+                    "application/json",
+                    await File.ReadAllTextAsync($"TestData/products_{productId}_book.json"));
+
+            var client = CreateClient(mockHttp);
+            var actual = await client.GetProductOrderBook(productId);
+
+            actual.Sequence.ShouldBe(3);
+
+            var bestBid = actual.Bids.ShouldHaveSingleItem();
+            bestBid.NumOrders.ShouldBe(2);
+            bestBid.Price.ShouldBe(295.96m);
+            bestBid.Size.ShouldBe(4.39088265m);
+
+            var bestAsk = actual.Asks.ShouldHaveSingleItem();
+            bestAsk.NumOrders.ShouldBe(12);
+            bestAsk.Price.ShouldBe(295.97m);
+            bestAsk.Size.ShouldBe(25.23542881m);
         }
 
         private static IMarketDataClient CreateClient(MockHttpMessageHandler mockHttp)

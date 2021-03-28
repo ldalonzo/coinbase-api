@@ -19,10 +19,10 @@ namespace LDZ.Coinbase.Test.Integration
         [Fact]
         public async Task GetProducts()
         {
-            var actual = await _fixture.MarketDataClient.GetProductsAsync();
+            var actualProducts = await _fixture.MarketDataClient.GetProductsAsync();
 
-            Assert.NotEmpty(actual);
-            Assert.Contains(actual, p => p.Id == "BTC-EUR");
+            actualProducts.ShouldNotBeEmpty();
+            actualProducts.ShouldContain(p => p.Id == "BTC-EUR");
         }
 
         [Theory]
@@ -54,9 +54,28 @@ namespace LDZ.Coinbase.Test.Integration
             var page1 = await _fixture.MarketDataClient.GetTradesAsync(productId);
             var page2 = await _fixture.MarketDataClient.GetTradesAsync(productId, page1.After);
 
-            Assert.NotEmpty(page1);
-            Assert.NotEmpty(page2);
+            page1.ShouldNotBeEmpty();
+            page2.ShouldNotBeEmpty();
             page1.Intersect(page2, new TradeTradeIdEqualityComparer()).ShouldBeEmpty();
+        }
+
+        [Theory]
+        [InlineData("BTC-USD")]
+        public async Task GetProductOrderBook(string productId)
+        {
+            var actual = await _fixture.MarketDataClient.GetProductOrderBook(productId);
+
+            actual.Sequence.ShouldBePositive();
+
+            var bestBid = actual.Bids.ShouldHaveSingleItem();
+            bestBid.NumOrders.ShouldBePositive();
+            bestBid.Price.ShouldBePositive();
+            bestBid.Size.ShouldBePositive();
+
+            var bestAsk = actual.Asks.ShouldHaveSingleItem();
+            bestAsk.NumOrders.ShouldBePositive();
+            bestAsk.Price.ShouldBePositive();
+            bestAsk.Size.ShouldBePositive();
         }
     }
 }
