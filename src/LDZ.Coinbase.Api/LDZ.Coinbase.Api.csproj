@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net5.0</TargetFramework>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <PackageId>LDZ.Coinbase.Api</PackageId>
+        <RepositoryType>git</RepositoryType>
+        <RepositoryUrl>https://github.com/ldalonzo/coinbase-api</RepositoryUrl>
+        <Authors>Leonardo D'Alonzo</Authors>
+        <Product>.NET client for the Coinbase Pro REST API</Product>
+        <Description>A .NET client for the Coinbase Pro REST API</Description>
+        <Company />
+        <Nullable>annotations</Nullable>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+      <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+      <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.Http" Version="5.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\LDZ.Coinbase.Api.Model\LDZ.Coinbase.Api.Model.csproj" />
+    </ItemGroup>
+
+</Project>
