@@ -77,5 +77,20 @@ namespace LDZ.Coinbase.Test.Integration
             bestAsk.Price.ShouldBePositive();
             bestAsk.Size.ShouldBePositive();
         }
+
+        [Theory]
+        [InlineData("BTC-USD")]
+        public async Task GetProductOrderBookLevel2(string productId)
+        {
+            var actual = await _fixture.MarketDataClient.GetProductOrderBook(productId, AggregatedProductOrderBookLevel.LevelTwo);
+
+            actual.Sequence.ShouldBePositive();
+
+            actual.Bids.ShouldNotBeEmpty();
+            actual.Bids.Count().ShouldBe(50);
+
+            actual.Asks.ShouldNotBeEmpty();
+            actual.Asks.Count().ShouldBe(50);
+        }
     }
 }

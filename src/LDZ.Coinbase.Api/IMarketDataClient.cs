@@ -28,8 +28,8 @@ namespace LDZ.Coinbase.Api
         Task<PaginatedResult<Trade>> GetTradesAsync(string productId, int? after = null, CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Get a list of open orders for a product. The amount of detail shown can be customized with the level parameter.
+        /// Get a list of open orders for a product. The amount of detail shown can be customized with the <paramref name="level"/> parameter.
         /// </summary>
-        Task<AggregatedProductOrderBook> GetProductOrderBook(string productId, CancellationToken cancellationToken = default);
+        Task<AggregatedProductOrderBook> GetProductOrderBook(string productId, AggregatedProductOrderBookLevel level = AggregatedProductOrderBookLevel.LevelOne, CancellationToken cancellationToken = default);
     }
 }

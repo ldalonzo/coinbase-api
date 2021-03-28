@@ -110,6 +110,29 @@ namespace LDZ.Coinbase.Test.Unit
             bestAsk.Size.ShouldBe(25.23542881m);
         }
 
+        [Theory]
+        [InlineData("BTC-USD")]
+        public async Task GetProductOrderBookLevel2(string productId)
+        {
+            var mockHttp = new MockHttpMessageHandler();
+            mockHttp
+                .When($"https://api.pro.coinbase.com/products/{productId}/book?level=2")
+                .Respond(
+                    "application/json",
+                    await File.ReadAllTextAsync($"TestData/products_{productId}_book_level2.json"));
+
+            var client = CreateClient(mockHttp);
+            var actual = await client.GetProductOrderBook(productId, AggregatedProductOrderBookLevel.LevelTwo);
+
+            actual.Sequence.ShouldBePositive();
+
+            actual.Bids.ShouldNotBeEmpty();
+            actual.Bids.Count().ShouldBe(50);
+
+            actual.Asks.ShouldNotBeEmpty();
+            actual.Asks.Count().ShouldBe(50);
+        }
+
         private static IMarketDataClient CreateClient(MockHttpMessageHandler mockHttp)
             => CreateClient(mockHttp, new ServiceCollection());
 

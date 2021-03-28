@@ -72,11 +72,18 @@ namespace LDZ.Coinbase.Api
                 await JsonSerializer.DeserializeAsync<IEnumerable<Trade>>(await response.Content.ReadAsStreamAsync(cancellationToken), _options, cancellationToken));
         }
 
-        public async Task<AggregatedProductOrderBook> GetProductOrderBook(string productId, CancellationToken cancellationToken = default)
+        public async Task<AggregatedProductOrderBook> GetProductOrderBook(string productId, AggregatedProductOrderBookLevel level = AggregatedProductOrderBookLevel.LevelOne, CancellationToken cancellationToken = default)
         {
             using var client = _factory.CreateClient(ClientNames.MarketData);
 
-            var response = await client.GetAsync(new Uri($"/products/{productId}/book", UriKind.Relative), cancellationToken);
+            var requestUriBuilder = new StringBuilder($"/products/{productId}/book");
+
+            if (level == AggregatedProductOrderBookLevel.LevelTwo)
+            {
+                requestUriBuilder.Append("?level=2");
+            }
+
+            var response = await client.GetAsync(new Uri(requestUriBuilder.ToString(), UriKind.Relative), cancellationToken);
             response.EnsureSuccessStatusCode();
 
             return await JsonSerializer.DeserializeAsync<AggregatedProductOrderBook>(await response.Content.ReadAsStreamAsync(cancellationToken), _options, cancellationToken);
