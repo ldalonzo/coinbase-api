@@ -1,5 +1,6 @@
 using System;
 using System.Net.Http;
+using LDZ.Coinbase.Api.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Http;
 using Microsoft.Extensions.Options;
@@ -10,9 +11,15 @@ namespace LDZ.Coinbase.Test.Unit
 {
     public static class MockHttpMessageHandlerServiceCollectionExtensions
     {
-        public static IServiceCollection AddMockHttpClient(this IServiceCollection services, MockHttpMessageHandler messageHandler)
+        public static T CreateClient<T>(this IServiceCollection services, MockHttpMessageHandler mockHttp) => services
+            .AddCoinbaseProRestApi()
+            .AddMockHttpClient(mockHttp)
+            .BuildServiceProvider()
+            .GetRequiredService<T>();
+
+        private static IServiceCollection AddMockHttpClient(this IServiceCollection services, MockHttpMessageHandler messageHandler)
         {
-            services.AddSingleton<IHttpClientFactory>(provider => CreateMockHttpClientFactory(provider, messageHandler));
+            services.AddSingleton(provider => CreateMockHttpClientFactory(provider, messageHandler));
 
             return services;
         }

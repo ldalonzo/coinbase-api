@@ -7,12 +7,12 @@ using Xunit;
 
 namespace LDZ.Coinbase.Test.Integration
 {
-    [Collection(nameof(MarketDataCollection))]
+    [Collection(nameof(CoinbaseRestApiCollection))]
     public class MarketDataIntegrationTest
     {
-        private readonly MarketDataClientFixture _fixture;
+        private readonly CoinbaseRestApiFixture _fixture;
 
-        public MarketDataIntegrationTest(MarketDataClientFixture fixture)
+        public MarketDataIntegrationTest(CoinbaseRestApiFixture fixture)
         {
             _fixture = fixture;
         }

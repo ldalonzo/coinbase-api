@@ -28,6 +28,9 @@
     </ItemGroup>
 
     <ItemGroup>
+        <None Update="TestData\orders.json">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
         <None Update="TestData\products.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
