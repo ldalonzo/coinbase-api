@@ -4,3 +4,12 @@
 A .NET client for the [Coinbase Pro REST API](https://docs.pro.coinbase.com/#api).
 
 ## Quick start
+
+```powershell
+dotnet add package LDZ.Coinbase.Api
+```
+
+```csharp
+var client = MarketDataClientFactory.CreateClient();
+var trades = await client.GetTradesAsync("BTC-USD");
+```
