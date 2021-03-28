@@ -5,7 +5,7 @@ on: [ push ]
 env:
   Major: 1
   Minor: 0
-  Patch: 0
+  Patch: 1
   BuildConfiguration: 'Release'
 
 jobs:
@@ -40,13 +40,17 @@ jobs:
 
     - name: Build
       run: |
-        dotnet build --no-restore --configuration $BuildConfiguration -p:Version=${{ env.version }} -p:AssemblyVersion=${{ env.assembly_version }}
+        dotnet build --configuration $BuildConfiguration --no-restore -p:Version=${{ env.version }} -p:AssemblyVersion=${{ env.assembly_version }}
 
     - name: Test
       run: dotnet test --configuration $BuildConfiguration --no-build --collect:"XPlat Code Coverage"
 
+    - name: Pack
+      run: |
+        dotnet pack --configuration $BuildConfiguration --no-restore -p:Version=${{ env.version }} -p:AssemblyVersion=${{ env.assembly_version }}
+
     - name: NuGet push nuget.org
-      if: ${{ github.ref == 'refs/heads/develop' }}
+      if: ${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' }}
       run: |
         dotnet nuget push $GITHUB_WORKSPACE/src/LDZ.Coinbase.Api/bin/$BuildConfiguration/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate --source https://api.nuget.org/v3/index.json
 
