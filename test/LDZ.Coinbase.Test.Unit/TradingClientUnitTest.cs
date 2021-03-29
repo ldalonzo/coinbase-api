@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using LDZ.Coinbase.Api;
+using LDZ.Coinbase.Api.Model;
 using LDZ.Coinbase.Api.Model.MarketData;
 using Microsoft.Extensions.DependencyInjection;
 using RichardSzalay.MockHttp;
@@ -47,6 +48,7 @@ namespace LDZ.Coinbase.Test.Unit
             actual.Side.ShouldBe(TradeSide.Buy);
             actual.Funds.ShouldBe(9.9750623400000000m);
             actual.SpecifiedFunds.ShouldBe(10.0000000000000000m);
+            actual.Type.ShouldBe(OrderType.Market);
             actual.PostOnly.ShouldBe(false);
             actual.CreatedAt.ShouldBe(DateTime.Parse("2016-12-08T20:09:05.508883Z"));
             actual.DoneAt.ShouldBe(DateTime.Parse("2016-12-08T20:09:05.527Z"));

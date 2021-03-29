@@ -19,6 +19,7 @@ namespace LDZ.Coinbase.Api
                 Converters =
                 {
                     new DecimalConverter(),
+                    new OrderTypeConverter(),
                     new TradeSideConverter()
                 }
             };

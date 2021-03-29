@@ -24,6 +24,9 @@ namespace LDZ.Coinbase.Api.Model
         [JsonPropertyName("specified_funds")]
         public decimal SpecifiedFunds { get; set; }
 
+        [JsonPropertyName("type")]
+        public OrderType Type { get; set; }
+
         [JsonPropertyName("post_only")]
         public bool PostOnly { get; set; }
 
