@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using LDZ.Coinbase.Api.Model;
 
@@ -14,5 +15,11 @@ namespace LDZ.Coinbase.Api
         /// As soon as an order is no longer open and settled, it will no longer appear in the default request.
         /// </summary>
         Task<PaginatedResult<Order>> ListOrdersAsync(CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Get a single order by order <see cref="id"/>from the profile that the API key belongs to.
+        /// </summary>
+        /// <remarks>If the order is canceled the response may have status code 404 if the order had no matches.</remarks>
+        Task<Order> GetOrderAsync(Guid id, CancellationToken cancellationToken = default);
     }
 }
