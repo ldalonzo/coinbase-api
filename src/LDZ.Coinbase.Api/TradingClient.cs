@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using LDZ.Coinbase.Api.Json.Serialization;
@@ -19,14 +21,27 @@ namespace LDZ.Coinbase.Api
                 Converters =
                 {
                     new DecimalConverter(),
-                    new OrderTypeConverter(),
-                    new TradeSideConverter()
-                }
+                    new OrderSideConverter(),
+                    new OrderTypeConverter()
+                },
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
             };
         }
 
         private readonly IHttpClientFactory _factory;
         private readonly JsonSerializerOptions _serializerOptions;
+
+        public async Task<Order> PlaceNewOrderAsync(NewOrderParameters newOrder, CancellationToken cancellationToken = default)
+        {
+            using var client = _factory.CreateClient(ClientNames.TradingClient);
+
+            var content = JsonContent.Create(newOrder, options: _serializerOptions);
+            var response = await client.PostAsync(new Uri("/orders", UriKind.Relative), content, cancellationToken);
+            response.EnsureSuccessStatusCode();
+
+            var json = await response.Content.ReadAsStringAsync(cancellationToken);
+            return JsonSerializer.Deserialize<Order>(json, _serializerOptions);
+        }
 
         public async Task<PaginatedResult<Order>> ListOrdersAsync(CancellationToken cancellationToken = default)
         {

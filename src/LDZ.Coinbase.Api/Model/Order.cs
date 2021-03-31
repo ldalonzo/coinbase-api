@@ -16,7 +16,7 @@ namespace LDZ.Coinbase.Api.Model
         public string ProductId { get; set; }
 
         [JsonPropertyName("side")]
-        public TradeSide Side { get; set; }
+        public OrderSide Side { get; set; }
 
         [JsonPropertyName("funds")]
         public decimal Funds { get; set; }

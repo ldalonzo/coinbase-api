@@ -5,7 +5,6 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using LDZ.Coinbase.Api;
 using LDZ.Coinbase.Api.Model;
-using LDZ.Coinbase.Api.Model.MarketData;
 using Microsoft.Extensions.DependencyInjection;
 using RichardSzalay.MockHttp;
 using Shouldly;
@@ -15,6 +14,32 @@ namespace LDZ.Coinbase.Test.Unit
 {
     public class TradingClientUnitTest
     {
+        [Fact]
+        public async Task PlaceNewOrder()
+        {
+            var id = Guid.Parse("d0c5340b-6d6c-49d9-b567-48c4bfca13d2");
+
+            var mockHttp = new MockHttpMessageHandler();
+            mockHttp
+                .When(HttpMethod.Post, "https://api.pro.coinbase.com/orders")
+                .WithContent(await File.ReadAllTextAsync($"TestData/new-order-request_{id}.json"))
+                .Respond("application/json", await File.ReadAllTextAsync($"TestData/orders_{id}.json"));
+
+            var client = CreateTradingClient(mockHttp);
+            var actual = await client.PlaceNewOrderAsync(new NewOrderParameters
+            {
+                ProductId = "BTC-USD",
+                Price = 0.100m,
+                Side = OrderSide.Buy,
+                Size = 0.01m
+            });
+
+            actual.ShouldNotBeNull();
+            actual.Id.ShouldBe(id);
+            actual.ProductId.ShouldBe("BTC-USD");
+            actual.Size.ShouldBe(0.01m);
+        }
+
         [Fact]
         public async Task ListOrders()
         {
@@ -45,7 +70,7 @@ namespace LDZ.Coinbase.Test.Unit
             actual.Id.ShouldBe(id);
             actual.Size.ShouldBe(1.00000000m);
             actual.ProductId.ShouldBe("BTC-USD");
-            actual.Side.ShouldBe(TradeSide.Buy);
+            actual.Side.ShouldBe(OrderSide.Buy);
             actual.Funds.ShouldBe(9.9750623400000000m);
             actual.SpecifiedFunds.ShouldBe(10.0000000000000000m);
             actual.Type.ShouldBe(OrderType.Market);

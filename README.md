@@ -15,3 +15,5 @@ Feed APIs provide market data and are public. By accessing the Coinbase Pro Mark
 var client = MarketDataClientFactory.CreateClient();
 var trades = await client.GetTradesAsync("BTC-USD");
 ```
+
+### Trading APIs

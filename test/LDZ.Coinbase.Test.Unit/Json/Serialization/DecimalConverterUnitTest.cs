@@ -21,5 +21,10 @@ namespace LDZ.Coinbase.Test.Unit.Json.Serialization
         [InlineData("\"blah")]
         public void DeserializeFails(string json)
             => Should.Throw<JsonException>(() => Deserialize(json));
+
+        [Theory]
+        [AutoData]
+        public void RoundtripSucceeds(decimal expected)
+            => Roundtrip(expected).ShouldBe(expected);
     }
 }
