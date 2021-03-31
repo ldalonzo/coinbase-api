@@ -1,15 +1,17 @@
-using System;
 using System.Threading.Tasks;
 using LDZ.Coinbase.Api;
 using LDZ.Coinbase.Api.DependencyInjection;
+using LDZ.Coinbase.Api.Options;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace LDZ.Coinbase.Test.Integration
 {
-    public class MarketDataClientFixture : IAsyncLifetime
+    public class CoinbaseRestApiFixture : IAsyncLifetime
     {
         public IMarketDataClient MarketDataClient { get; private set; }
+
+        public ITradingClient TradingClient { get; private set; }
 
         private ServiceProvider ServiceProvider { get; set; }
 
@@ -18,10 +20,11 @@ namespace LDZ.Coinbase.Test.Integration
             var services = new ServiceCollection();
 
             ServiceProvider = services
-                .AddMarketDataClient(b => b.Configure(o => o.BaseAddress = new Uri("https://api-public.sandbox.pro.coinbase.com", UriKind.Absolute)))
+                .AddCoinbaseProRestApi(b => b.UseSandbox())
                 .BuildServiceProvider();
 
             MarketDataClient = ServiceProvider.GetRequiredService<IMarketDataClient>();
+            TradingClient = ServiceProvider.GetRequiredService<ITradingClient>();
 
             return Task.CompletedTask;
         }

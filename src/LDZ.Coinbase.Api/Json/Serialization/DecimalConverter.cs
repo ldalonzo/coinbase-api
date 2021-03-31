@@ -17,6 +17,6 @@ namespace LDZ.Coinbase.Api.Json.Serialization
         }
 
         public override void Write(Utf8JsonWriter writer, decimal value, JsonSerializerOptions options)
-            => throw new NotImplementedException();
+            => writer.WriteStringValue($"{value}");
     }
 }

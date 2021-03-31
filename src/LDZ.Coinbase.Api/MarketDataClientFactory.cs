@@ -6,7 +6,7 @@ namespace LDZ.Coinbase.Api
     public static class MarketDataClientFactory
     {
         public static IMarketDataClient CreateClient() => new ServiceCollection()
-            .AddMarketDataClient()
+            .AddCoinbaseProRestApi()
             .BuildServiceProvider()
             .GetRequiredService<IMarketDataClient>();
     }

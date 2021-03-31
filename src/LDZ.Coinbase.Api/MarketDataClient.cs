@@ -86,7 +86,8 @@ namespace LDZ.Coinbase.Api
             var response = await client.GetAsync(new Uri(requestUriBuilder.ToString(), UriKind.Relative), cancellationToken);
             response.EnsureSuccessStatusCode();
 
-            return await JsonSerializer.DeserializeAsync<AggregatedProductOrderBook>(await response.Content.ReadAsStreamAsync(cancellationToken), _options, cancellationToken);
+            var json = await response.Content.ReadAsStringAsync(cancellationToken);
+            return JsonSerializer.Deserialize<AggregatedProductOrderBook>(json, _options);
         }
 
         public async Task<ApiServerTime> GetTimeAsync(CancellationToken cancellationToken = default)
