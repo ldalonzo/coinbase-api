@@ -13,7 +13,7 @@
         <Nullable>annotations</Nullable>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <Copyright>Leonardo D'Alonzo</Copyright>
-        <PackageTags>coinbase</PackageTags>
+        <PackageTags>coinbase gdax</PackageTags>
         <PackageIcon>icon.png</PackageIcon>
     </PropertyGroup>
 

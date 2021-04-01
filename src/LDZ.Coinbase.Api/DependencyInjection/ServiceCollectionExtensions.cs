@@ -1,4 +1,5 @@
 ﻿using System;
+using LDZ.Coinbase.Api.Net;
 using LDZ.Coinbase.Api.Net.Http;
 using LDZ.Coinbase.Api.Net.Http.Headers;
 using LDZ.Coinbase.Api.Options;
@@ -9,7 +10,14 @@ namespace LDZ.Coinbase.Api.DependencyInjection
 {
     public static class ServiceCollectionExtensions
     {
-        public static IServiceCollection AddCoinbaseProRestApi(this IServiceCollection services, Action<OptionsBuilder<CoinbaseApiOptions>> configure)
+        public static IServiceCollection AddCoinbaseProRestApi(this IServiceCollection services,
+            Action<OptionsBuilder<CoinbaseApiOptions>>? configure = null,
+            Action<OptionsBuilder<CoinbaseApiKeyOptions>>? configureApiKey = null)
+            => AddCoinbaseProRestApiInternal(services, configure ?? (b => b.UseProduction()), configureApiKey);
+
+        private static IServiceCollection AddCoinbaseProRestApiInternal(this IServiceCollection services,
+            Action<OptionsBuilder<CoinbaseApiOptions>> configure,
+            Action<OptionsBuilder<CoinbaseApiKeyOptions>>? configureApiKey = null)
         {
             services
                 .AddTransient<IMarketDataClient, MarketDataClient>()
@@ -18,8 +26,9 @@ namespace LDZ.Coinbase.Api.DependencyInjection
                 .AddTransient<ThrottlingPolicyHandler>()
                 .AddTransient<MessageAuthenticationCodeHandler>();
 
-            var optionsBuilder = services.AddOptions<CoinbaseApiOptions>();
-            configure(optionsBuilder);
+            configure(services.AddOptions<CoinbaseApiOptions>());
+
+            configureApiKey?.Invoke(services.AddOptions<CoinbaseApiKeyOptions>());
 
             services
                 .AddHttpClient(ClientNames.MarketData, (provider, client) =>
@@ -39,8 +48,5 @@ namespace LDZ.Coinbase.Api.DependencyInjection
 
             return services;
         }
-
-        public static IServiceCollection AddCoinbaseProRestApi(this IServiceCollection services) => services
-            .AddCoinbaseProRestApi(builder => builder.Configure(o => { o.RestApiBaseUri = EndpointUriNames.RestApiUri; }));
     }
 }

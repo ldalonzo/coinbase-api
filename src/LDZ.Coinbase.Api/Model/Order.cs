@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Text.Json.Serialization;
-using LDZ.Coinbase.Api.Model.MarketData;
 
 namespace LDZ.Coinbase.Api.Model
 {
@@ -13,7 +12,7 @@ namespace LDZ.Coinbase.Api.Model
         public decimal Size { get; set; }
 
         [JsonPropertyName("product_id")]
-        public string ProductId { get; set; }
+        public string? ProductId { get; set; }
 
         [JsonPropertyName("side")]
         public OrderSide Side { get; set; }

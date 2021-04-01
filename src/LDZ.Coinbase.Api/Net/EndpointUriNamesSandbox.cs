@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LDZ.Coinbase.Api
+namespace LDZ.Coinbase.Api.Net
 {
     /// <summary>
     /// A public sandbox is available for testing API connectivity and web trading.  While the sandbox only hosts a subset of the production order books,

@@ -12,7 +12,7 @@ namespace LDZ.Coinbase.Api.Net.Http
 {
     internal class MessageAuthenticationCodeHandler : DelegatingHandler
     {
-        public MessageAuthenticationCodeHandler(IOptions<ApiKeyOptions> options)
+        public MessageAuthenticationCodeHandler(IOptions<CoinbaseApiKeyOptions> options)
         {
             _options = options;
 
@@ -20,7 +20,7 @@ namespace LDZ.Coinbase.Api.Net.Http
             _hashAlgorithm = new HMACSHA256(Convert.FromBase64String(_options.Value.Secret));
         }
 
-        private readonly IOptions<ApiKeyOptions> _options;
+        private readonly IOptions<CoinbaseApiKeyOptions> _options;
         private readonly HashAlgorithm _hashAlgorithm;
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)

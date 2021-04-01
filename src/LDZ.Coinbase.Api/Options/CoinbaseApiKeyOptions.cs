@@ -7,12 +7,12 @@
     /// by you to further secure your API access.
     /// </para>
     /// </summary>
-    public class ApiKeyOptions
+    public class CoinbaseApiKeyOptions
     {
-        public string Key { get; set; }
+        public string? Key { get; set; }
 
-        public string Secret { get; set; }
+        public string? Secret { get; set; }
 
-        public string Passphrase { get; set; }
+        public string? Passphrase { get; set; }
     }
 }

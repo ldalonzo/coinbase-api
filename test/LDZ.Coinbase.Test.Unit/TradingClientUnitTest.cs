@@ -46,13 +46,26 @@ namespace LDZ.Coinbase.Test.Unit
             var mockHttp = new MockHttpMessageHandler();
             mockHttp
                 .When(HttpMethod.Get, "https://api.pro.coinbase.com/orders")
-                .Respond("application/json", await File.ReadAllTextAsync("TestData/orders.json"));
+                .Respond("application/json", await File.ReadAllTextAsync("TestData/get_orders.json"));
 
             var client = CreateTradingClient(mockHttp);
             var actual = await client.ListOrdersAsync();
 
             actual.Count().ShouldBe(2);
             actual.ShouldContain(o => o.Id == Guid.Parse("d0c5340b-6d6c-49d9-b567-48c4bfca13d2"));
+        }
+
+        [Fact]
+        public async Task CancelAllOrders()
+        {
+            var mockHttp = new MockHttpMessageHandler();
+            mockHttp
+                .When(HttpMethod.Delete, $"https://api.pro.coinbase.com/orders")
+                .Respond("application/json", await File.ReadAllTextAsync("TestData/delete_orders.json"));
+
+            var client = CreateTradingClient(mockHttp);
+            var actual = await client.CancelAllOrders();
+            actual.ShouldContain(c => c == Guid.Parse("144c6f8e-713f-4682-8435-5280fbe8b2b4"));
         }
 
         [Fact]

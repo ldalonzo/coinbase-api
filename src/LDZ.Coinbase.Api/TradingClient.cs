@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using LDZ.Coinbase.Api.Json.Serialization;
 using LDZ.Coinbase.Api.Model;
+using LDZ.Coinbase.Api.Net;
 
 namespace LDZ.Coinbase.Api
 {
@@ -41,6 +42,17 @@ namespace LDZ.Coinbase.Api
 
             var json = await response.Content.ReadAsStringAsync(cancellationToken);
             return JsonSerializer.Deserialize<Order>(json, _serializerOptions);
+        }
+
+        public async Task<IEnumerable<Guid>> CancelAllOrders(string? productId = null, CancellationToken cancellationToken = default)
+        {
+            using var client = _factory.CreateClient(ClientNames.TradingClient);
+
+            var response = await client.DeleteAsync(new Uri("/orders", UriKind.Relative), cancellationToken);
+            response.EnsureSuccessStatusCode();
+
+            var json = await response.Content.ReadAsStringAsync(cancellationToken);
+            return JsonSerializer.Deserialize<IEnumerable<Guid>>(json, _serializerOptions);
         }
 
         public async Task<PaginatedResult<Order>> ListOrdersAsync(CancellationToken cancellationToken = default)

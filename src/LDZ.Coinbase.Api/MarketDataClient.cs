@@ -9,6 +9,7 @@ using System.Web;
 using LDZ.Coinbase.Api.Json.Serialization;
 using LDZ.Coinbase.Api.Model;
 using LDZ.Coinbase.Api.Model.MarketData;
+using LDZ.Coinbase.Api.Net;
 
 namespace LDZ.Coinbase.Api
 {
