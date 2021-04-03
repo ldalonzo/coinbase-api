@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Net.Http.Headers;
-using LDZ.Coinbase.Api.Model;
 using LDZ.Coinbase.Api.Net.Http.Headers;
 
-namespace LDZ.Coinbase.Api
+namespace LDZ.Coinbase.Api.Model
 {
     internal static class PaginatedResultFactory
     {

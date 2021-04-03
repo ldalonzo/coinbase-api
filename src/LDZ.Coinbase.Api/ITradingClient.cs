@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using LDZ.Coinbase.Api.Model;
@@ -16,6 +17,23 @@ namespace LDZ.Coinbase.Api
         /// Once reached, the profile will not be able to place any new orders until the total number of open orders is below 500.
         /// </summary>
         Task<Order> PlaceNewOrderAsync(NewOrderParameters newOrder, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Cancel a previously placed order. Order must belong to the profile that the API key belongs to.
+        /// </summary>
+        /// <param name="orderId"></param>
+        /// <param name="productId">The product ID of the order. While not required, the request will be more efficient if you include it.</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        Task<Guid> CancelOrder(Guid orderId, string? productId = null, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// With best effort, cancel all open orders from the profile that the API key belongs to.
+        /// </summary>
+        /// <param name="productId">Only cancel orders open for the specific <paramref name="productId"/></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>A list of ids of the canceled orders</returns>
+        Task<IReadOnlyCollection<Guid>> CancelAllOrders(string? productId = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// List your current open orders from the profile that the API key belongs to.  Only open or un-settled orders are returned.

@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Text;
 using System.Text.Json.Serialization;
-using LDZ.Coinbase.Api.Model.MarketData;
 
 namespace LDZ.Coinbase.Api.Model
 {
@@ -9,20 +9,23 @@ namespace LDZ.Coinbase.Api.Model
         [JsonPropertyName("id")]
         public Guid Id { get; set; }
 
+        [JsonPropertyName("price")]
+        public decimal? Price { get; set; }
+
         [JsonPropertyName("size")]
         public decimal Size { get; set; }
 
         [JsonPropertyName("product_id")]
-        public string ProductId { get; set; }
+        public string? ProductId { get; set; }
 
         [JsonPropertyName("side")]
         public OrderSide Side { get; set; }
 
         [JsonPropertyName("funds")]
-        public decimal Funds { get; set; }
+        public decimal? Funds { get; set; }
 
         [JsonPropertyName("specified_funds")]
-        public decimal SpecifiedFunds { get; set; }
+        public decimal? SpecifiedFunds { get; set; }
 
         [JsonPropertyName("type")]
         public OrderType Type { get; set; }
@@ -34,18 +37,39 @@ namespace LDZ.Coinbase.Api.Model
         public DateTime CreatedAt { get; set; }
 
         [JsonPropertyName("done_at")]
-        public DateTime DoneAt { get; set; }
+        public DateTime? DoneAt { get; set; }
 
         [JsonPropertyName("fill_fees")]
-        public decimal FillFees { get; set; }
+        public decimal? FillFees { get; set; }
 
         [JsonPropertyName("filled_size")]
-        public decimal FilledSize { get; set; }
+        public decimal? FilledSize { get; set; }
 
         [JsonPropertyName("executed_value")]
-        public decimal ExecutedValue { get; set; }
+        public decimal? ExecutedValue { get; set; }
 
         [JsonPropertyName("settled")]
         public bool Settled { get; set; }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+
+            sb.Append($"#{Id} [");
+
+            if (ProductId != null)
+            {
+                sb.Append($" {ProductId}");
+            }
+
+            if (Price != null)
+            {
+                sb.Append($" {Size}@{Price}");
+            }
+
+            sb.Append(" ]");
+
+            return sb.ToString();
+        }
     }
 }
