@@ -25,18 +25,23 @@ namespace LDZ.Coinbase.Api
         private readonly IHttpClientFactory _factory;
         private readonly JsonSerializerOptions _options;
 
-        public async Task<IEnumerable<Product>> GetProductsAsync(CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyCollection<Product>> GetProductsAsync(CancellationToken cancellationToken = default)
         {
             using var client = _factory.CreateClient(ClientNames.MarketData);
 
             var response = await client.GetAsync(new Uri("/products", UriKind.Relative), cancellationToken);
             response.EnsureSuccessStatusCode();
 
-            return await JsonSerializer.DeserializeAsync<IEnumerable<Product>>(await response.Content.ReadAsStreamAsync(cancellationToken), _options, cancellationToken);
+            return await JsonSerializer.DeserializeAsync<IReadOnlyCollection<Product>>(await response.Content.ReadAsStreamAsync(cancellationToken), _options, cancellationToken);
         }
 
         public async Task<Product> GetProductAsync(string productId, CancellationToken cancellationToken = default)
         {
+            if (productId == null)
+            {
+                throw new ArgumentNullException(nameof(productId));
+            }
+
             using var client = _factory.CreateClient(ClientNames.MarketData);
 
             var response = await client.GetAsync(new Uri($"/products/{productId}", UriKind.Relative), cancellationToken);
@@ -47,6 +52,11 @@ namespace LDZ.Coinbase.Api
 
         public async Task<PaginatedResult<Trade>> GetTradesAsync(string productId, int? after = null, CancellationToken cancellationToken = default)
         {
+            if (productId == null)
+            {
+                throw new ArgumentNullException(nameof(productId));
+            }
+
             using var client = _factory.CreateClient(ClientNames.MarketData);
 
             var requestUriBuilder = new StringBuilder($"/products/{productId}/trades");
@@ -72,6 +82,11 @@ namespace LDZ.Coinbase.Api
 
         public async Task<AggregatedProductOrderBook> GetProductOrderBookAsync(string productId, AggregatedProductOrderBookLevel level = AggregatedProductOrderBookLevel.LevelOne, CancellationToken cancellationToken = default)
         {
+            if (productId == null)
+            {
+                throw new ArgumentNullException(nameof(productId));
+            }
+
             using var client = _factory.CreateClient(ClientNames.MarketData);
 
             var requestUriBuilder = new StringBuilder($"/products/{productId}/book");

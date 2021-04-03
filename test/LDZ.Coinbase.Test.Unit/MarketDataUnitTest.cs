@@ -77,6 +77,7 @@ namespace LDZ.Coinbase.Test.Unit
             Assert.Equal(before, actual.Before);
 
             var actualTrade = actual.FirstOrDefault(a => a.TradeId == 73);
+            actualTrade.ShouldNotBeNull();
             Assert.Equal(TradeSide.Sell, actualTrade.Side);
             Assert.Equal(100m, actualTrade.Price);
             Assert.Equal(0.01m, actualTrade.Size);
@@ -119,7 +120,7 @@ namespace LDZ.Coinbase.Test.Unit
                 .When(HttpMethod.Get, $"https://api.pro.coinbase.com/products/{productId}/book?level=2")
                 .Respond(
                     "application/json",
-                    await File.ReadAllTextAsync($"TestData/products_{productId}_book_level2.json"));
+                    await File.ReadAllTextAsync($"TestData/get_products_{productId}_book_level2.json"));
 
             var client = CreateMarketDataClient(mockHttp);
             var actual = await client.GetProductOrderBookAsync(productId, AggregatedProductOrderBookLevel.LevelTwo);

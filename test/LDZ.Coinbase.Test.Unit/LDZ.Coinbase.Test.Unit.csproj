@@ -37,10 +37,10 @@
         <None Update="TestData\new-order-request_d0c5340b-6d6c-49d9-b567-48c4bfca13d2.json">
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-        <None Update="TestData\orders_68e6a28f-ae28-4788-8d4f-5ab4e5e5ae08.json">
+        <None Update="TestData\get_orders_68e6a28f-ae28-4788-8d4f-5ab4e5e5ae08.json">
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-        <None Update="TestData\orders_d0c5340b-6d6c-49d9-b567-48c4bfca13d2.json">
+        <None Update="TestData\get_orders_d0c5340b-6d6c-49d9-b567-48c4bfca13d2.json">
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
         <None Update="TestData\products.json">
@@ -52,7 +52,7 @@
         <None Update="TestData\products_BTC-USD_book.json">
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-        <None Update="TestData\products_BTC-USD_book_level2.json">
+        <None Update="TestData\get_products_BTC-USD_book_level2.json">
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
         <None Update="TestData\products_BTC-USD_trades.json">
