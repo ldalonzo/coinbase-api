@@ -20,7 +20,7 @@ namespace LDZ.Coinbase.Test.Integration
             var services = new ServiceCollection();
 
             ServiceProvider = services
-                .AddCoinbaseProRestApi(b => b.UseSandbox())
+                .AddCoinbaseProRestApi(_ => {}, api => api.UseSandbox())
                 .BuildServiceProvider();
 
             MarketDataClient = ServiceProvider.GetRequiredService<IMarketDataClient>();

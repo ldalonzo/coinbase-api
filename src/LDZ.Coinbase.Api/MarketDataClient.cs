@@ -6,23 +6,20 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
-using LDZ.Coinbase.Api.Json.Serialization;
 using LDZ.Coinbase.Api.Model;
 using LDZ.Coinbase.Api.Model.MarketData;
 using LDZ.Coinbase.Api.Net;
+using Microsoft.Extensions.Options;
 
 namespace LDZ.Coinbase.Api
 {
     internal class MarketDataClient : IMarketDataClient
     {
-        public MarketDataClient(IHttpClientFactory factory)
+        public MarketDataClient(IHttpClientFactory factory, IOptions<JsonSerializerOptions> serializerOptions)
         {
             _factory = factory;
 
-            _options = new JsonSerializerOptions();
-            _options.Converters.Add(new DecimalConverter());
-            _options.Converters.Add(new TradeSideConverter());
-            _options.Converters.Add(new AggregatedOrderJsonConverter());
+            _options = serializerOptions.Value;
         }
 
         private readonly IHttpClientFactory _factory;

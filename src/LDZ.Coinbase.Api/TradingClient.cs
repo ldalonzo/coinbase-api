@@ -3,30 +3,20 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
-using LDZ.Coinbase.Api.Json.Serialization;
 using LDZ.Coinbase.Api.Model;
 using LDZ.Coinbase.Api.Net;
+using Microsoft.Extensions.Options;
 
 namespace LDZ.Coinbase.Api
 {
     internal class TradingClient : ITradingClient
     {
-        public TradingClient(IHttpClientFactory factory)
+        public TradingClient(IHttpClientFactory factory, IOptions<JsonSerializerOptions> serializerOptions)
         {
             _factory = factory;
-            _serializerOptions = new JsonSerializerOptions
-            {
-                Converters =
-                {
-                    new DecimalConverter(),
-                    new OrderSideConverter(),
-                    new OrderTypeConverter()
-                },
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-            };
+            _serializerOptions = serializerOptions.Value;
         }
 
         private readonly IHttpClientFactory _factory;
