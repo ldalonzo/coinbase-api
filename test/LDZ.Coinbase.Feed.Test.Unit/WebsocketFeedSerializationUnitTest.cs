@@ -43,6 +43,17 @@ namespace LDZ.Coinbase.Feed.Test.Unit
         }
 
         [Fact]
+        public async Task DeserializeSubscriptionsMessage()
+        {
+            var actual = JsonSerializer.Deserialize<FeedResponseMessage>(await File.ReadAllTextAsync("TestData/message_subscriptions.json"), SerializerOptions);
+
+            var message = actual.ShouldBeOfType<SubscriptionsMessage>();
+            message.Channels.ShouldNotBeNull();
+            var channel = message.Channels.ShouldHaveSingleItem().ShouldBeOfType<HeartbeatChannelSubscription>();
+            channel.Products.ShouldHaveSingleItem().ShouldBe("ETH-EUR");
+        }
+
+        [Fact]
         public async Task DeserializeHeartbeatMessage()
         {
             var actual = JsonSerializer.Deserialize<FeedResponseMessage>(await File.ReadAllTextAsync("TestData/message_heartbeat.json"), SerializerOptions);

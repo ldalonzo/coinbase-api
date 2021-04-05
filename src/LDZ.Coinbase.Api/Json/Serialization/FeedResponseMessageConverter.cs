@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using LDZ.Coinbase.Api.Model.Feed;
+using LDZ.Coinbase.Api.Model.Feed.Channel;
 
 namespace LDZ.Coinbase.Api.Json.Serialization
 {
@@ -35,12 +37,13 @@ namespace LDZ.Coinbase.Api.Json.Serialization
             var messageType = reader.GetString();
             return messageType switch
             {
-                "heartbeat" => ReadHeartbeatMessage(ref reader, new HeartbeatMessage()),
+                FeedResponseMessageNames.Heartbeat => ReadHeartbeatMessage(ref reader, options, new HeartbeatMessage()),
+                FeedResponseMessageNames.Subscriptions => ReadSubscriptionsMessage(ref reader, options, new SubscriptionsMessage()),
                 _ => throw new JsonException($"Message of type \"{messageType}\" is NOT supported.")
             };
         }
 
-        private static HeartbeatMessage ReadHeartbeatMessage(ref Utf8JsonReader reader, HeartbeatMessage value)
+        private static FeedResponseMessage ReadHeartbeatMessage(ref Utf8JsonReader reader, JsonSerializerOptions options, HeartbeatMessage value)
         {
             while (reader.Read())
             {
@@ -52,6 +55,7 @@ namespace LDZ.Coinbase.Api.Json.Serialization
                 if (reader.TokenType == JsonTokenType.PropertyName)
                 {
                     var propertyName = reader.GetString();
+
                     reader.Read();
                     switch (propertyName)
                     {
@@ -73,6 +77,44 @@ namespace LDZ.Coinbase.Api.Json.Serialization
                     }
                 }
 
+            }
+
+            throw new JsonException();
+        }
+
+        private static FeedResponseMessage ReadSubscriptionsMessage(ref Utf8JsonReader reader, JsonSerializerOptions options, SubscriptionsMessage value)
+        {
+            while (reader.Read())
+            {
+                if (reader.TokenType == JsonTokenType.EndObject)
+                {
+                    return value;
+                }
+
+                if (reader.TokenType == JsonTokenType.PropertyName)
+                {
+                    switch (reader.GetString())
+                    {
+                        case "channels":
+
+                            value.Channels = new List<ChannelSubscription>();
+
+                            reader.Read();
+                            if (reader.TokenType != JsonTokenType.StartArray)
+                            {
+                                throw new JsonException();
+                            }
+
+                            reader.Read();
+                            while (reader.TokenType != JsonTokenType.EndArray)
+                            {
+                                value.Channels.Add(JsonSerializer.Deserialize<ChannelSubscription>(ref reader, options));
+                                reader.Read();
+                            }
+
+                            break;
+                    }
+                }
             }
 
             throw new JsonException();
