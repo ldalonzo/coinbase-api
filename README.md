@@ -32,7 +32,9 @@ var tradingClient = factory.CreateTradingClient();
 var orders = await tradingClient.ListOrdersAsync();
 ```
 
-## Run integration tests
+## Contributing
+
+### Run integration tests
 Integration tests target the public [Coinbase sandbox](https://docs.pro.coinbase.com/#sandbox). You'll need to create an API key and set the following environment variables:
 ```powershell
  $env:CoinbaseApiKey__Key = "API_KEY"

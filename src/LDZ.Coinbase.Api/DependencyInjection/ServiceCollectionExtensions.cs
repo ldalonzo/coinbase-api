@@ -34,17 +34,7 @@ namespace LDZ.Coinbase.Api.DependencyInjection
                 throw new ArgumentNullException(nameof(services));
             }
 
-            services
-                .Configure<JsonSerializerOptions>(jsonOptions =>
-                {
-                    jsonOptions.Converters.Add(new AggregatedOrderJsonConverter());
-                    jsonOptions.Converters.Add(new DecimalConverter());
-                    jsonOptions.Converters.Add(new OrderSideConverter());
-                    jsonOptions.Converters.Add(new OrderTypeConverter());
-                    jsonOptions.Converters.Add(new TradeSideConverter());
-
-                    jsonOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-                });
+            services.ConfigureCoinbaseSerializerOptions();
 
             services
                 .AddTransient<IMarketDataClient, MarketDataClient>()
@@ -74,5 +64,20 @@ namespace LDZ.Coinbase.Api.DependencyInjection
 
             return new CoinbaseApiBuilder(services);
         }
+
+        public static IServiceCollection ConfigureCoinbaseSerializerOptions(this IServiceCollection services) =>
+            services.Configure<JsonSerializerOptions>(jsonOptions =>
+            {
+                jsonOptions.Converters.Add(new AggregatedOrderJsonConverter());
+                jsonOptions.Converters.Add(new DecimalConverter());
+                jsonOptions.Converters.Add(new OrderSideConverter());
+                jsonOptions.Converters.Add(new OrderTypeConverter());
+                jsonOptions.Converters.Add(new TradeSideConverter());
+
+                jsonOptions.Converters.Add(new ChannelSubscriptionConverter());
+                jsonOptions.Converters.Add(new FeedMessageConverter());
+
+                jsonOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+            });
     }
 }

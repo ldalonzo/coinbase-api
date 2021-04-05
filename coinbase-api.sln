@@ -17,6 +17,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LDZ.Coinbase.Test.Unit", "t
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LDZ.Coinbase.Api", "src\LDZ.Coinbase.Api\LDZ.Coinbase.Api.csproj", "{8BD19D10-0F61-44C6-8A05-95455C2086D3}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LDZ.Coinbase.Feed.Test.Unit", "test\LDZ.Coinbase.Feed.Test.Unit\LDZ.Coinbase.Feed.Test.Unit.csproj", "{A9F938E2-0976-4F91-9DD1-8D93D1E60EEF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -63,6 +65,18 @@ Global
 		{8BD19D10-0F61-44C6-8A05-95455C2086D3}.Release|x64.Build.0 = Release|Any CPU
 		{8BD19D10-0F61-44C6-8A05-95455C2086D3}.Release|x86.ActiveCfg = Release|Any CPU
 		{8BD19D10-0F61-44C6-8A05-95455C2086D3}.Release|x86.Build.0 = Release|Any CPU
+		{A9F938E2-0976-4F91-9DD1-8D93D1E60EEF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A9F938E2-0976-4F91-9DD1-8D93D1E60EEF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A9F938E2-0976-4F91-9DD1-8D93D1E60EEF}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A9F938E2-0976-4F91-9DD1-8D93D1E60EEF}.Debug|x64.Build.0 = Debug|Any CPU
+		{A9F938E2-0976-4F91-9DD1-8D93D1E60EEF}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A9F938E2-0976-4F91-9DD1-8D93D1E60EEF}.Debug|x86.Build.0 = Debug|Any CPU
+		{A9F938E2-0976-4F91-9DD1-8D93D1E60EEF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A9F938E2-0976-4F91-9DD1-8D93D1E60EEF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A9F938E2-0976-4F91-9DD1-8D93D1E60EEF}.Release|x64.ActiveCfg = Release|Any CPU
+		{A9F938E2-0976-4F91-9DD1-8D93D1E60EEF}.Release|x64.Build.0 = Release|Any CPU
+		{A9F938E2-0976-4F91-9DD1-8D93D1E60EEF}.Release|x86.ActiveCfg = Release|Any CPU
+		{A9F938E2-0976-4F91-9DD1-8D93D1E60EEF}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -70,6 +84,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{834CBA50-D0E1-438D-AA19-63B5166298B8} = {66FD6565-70FE-4935-9C3B-3CEB5710799F}
 		{06D86245-19AE-4AE5-8584-D54F4A3BA3DA} = {66FD6565-70FE-4935-9C3B-3CEB5710799F}
+		{A9F938E2-0976-4F91-9DD1-8D93D1E60EEF} = {66FD6565-70FE-4935-9C3B-3CEB5710799F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {80595D02-224A-45E4-B15B-125EE3FE94D9}
