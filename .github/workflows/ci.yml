@@ -3,7 +3,7 @@ name: CI
 on: [ push ]
 
 env:
-  Major: 2
+  Major: 3
   Minor: 0
   Patch: 0
   BuildConfiguration: 'Release'
@@ -27,7 +27,7 @@ jobs:
     - name: Set Version
       if: ${{ github.ref != 'refs/heads/master' }}
       run: |
-        echo "version=$Major.$Minor.$Patch-preview2" >> $GITHUB_ENV
+        echo "version=$Major.$Minor.$Patch-preview1" >> $GITHUB_ENV
         echo "assembly_version=$Major.$Minor.$Patch.$GITHUB_RUN_NUMBER" >> $GITHUB_ENV
 
     - name: Setup .NET
