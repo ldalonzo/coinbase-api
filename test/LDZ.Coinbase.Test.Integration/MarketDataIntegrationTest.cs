@@ -1,26 +1,31 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using LDZ.Coinbase.Api;
 using LDZ.Coinbase.Api.Model.MarketData;
+using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using Xunit;
 
 namespace LDZ.Coinbase.Test.Integration
 {
-    [Collection(nameof(MarketDataCollection))]
-    public class MarketDataIntegrationTest
+    [Collection(nameof(CoinbaseRestApiCollection))]
+    public class MarketDataIntegrationTest : IAsyncLifetime
     {
-        private readonly MarketDataClientFixture _fixture;
-
-        public MarketDataIntegrationTest(MarketDataClientFixture fixture)
+        public MarketDataIntegrationTest(CoinbaseRestApiFixture fixture)
         {
             _fixture = fixture;
         }
 
+        private readonly CoinbaseRestApiFixture _fixture;
+        private IServiceScope _serviceScope;
+
+        private IMarketDataClient MarketData { get; set; }
+
         [Fact]
         public async Task GetProducts()
         {
-            var actualProducts = await _fixture.MarketDataClient.GetProductsAsync();
+            var actualProducts = await MarketData.GetProductsAsync();
 
             actualProducts.ShouldNotBeEmpty();
             actualProducts.ShouldContain(p => p.Id == "BTC-EUR");
@@ -31,7 +36,7 @@ namespace LDZ.Coinbase.Test.Integration
         [InlineData("BTC-USD")]
         public async Task GetProduct(string productId)
         {
-            var actual = await _fixture.MarketDataClient.GetProductAsync(productId);
+            var actual = await MarketData.GetProductAsync(productId);
 
             Assert.NotNull(actual);
             Assert.Equal(productId, actual.Id);
@@ -41,7 +46,7 @@ namespace LDZ.Coinbase.Test.Integration
         [InlineData("BTC-USD")]
         public async Task GetTrades(string productId)
         {
-            var actual = await _fixture.MarketDataClient.GetTradesAsync(productId);
+            var actual = await MarketData.GetTradesAsync(productId);
 
             Assert.NotEmpty(actual);
             Assert.True(actual.After.HasValue);
@@ -52,8 +57,8 @@ namespace LDZ.Coinbase.Test.Integration
         [InlineData("BTC-USD")]
         public async Task GetTradesWithAfterCursor(string productId)
         {
-            var page1 = await _fixture.MarketDataClient.GetTradesAsync(productId);
-            var page2 = await _fixture.MarketDataClient.GetTradesAsync(productId, page1.After);
+            var page1 = await MarketData.GetTradesAsync(productId);
+            var page2 = await MarketData.GetTradesAsync(productId, page1.After);
 
             page1.ShouldNotBeEmpty();
             page2.ShouldNotBeEmpty();
@@ -64,7 +69,7 @@ namespace LDZ.Coinbase.Test.Integration
         [InlineData("BTC-USD")]
         public async Task GetProductOrderBook(string productId)
         {
-            var actual = await _fixture.MarketDataClient.GetProductOrderBookAsync(productId);
+            var actual = await MarketData.GetProductOrderBookAsync(productId);
 
             actual.Sequence.ShouldBePositive();
 
@@ -83,7 +88,7 @@ namespace LDZ.Coinbase.Test.Integration
         [InlineData("BTC-USD")]
         public async Task GetProductOrderBookLevel2(string productId)
         {
-            var actual = await _fixture.MarketDataClient.GetProductOrderBookAsync(productId, AggregatedProductOrderBookLevel.LevelTwo);
+            var actual = await MarketData.GetProductOrderBookAsync(productId, AggregatedProductOrderBookLevel.LevelTwo);
 
             actual.Sequence.ShouldBePositive();
 
@@ -97,10 +102,25 @@ namespace LDZ.Coinbase.Test.Integration
         [Fact]
         public async Task GetTime()
         {
-            var actual = await _fixture.MarketDataClient.GetTimeAsync();
+            var actual = await MarketData.GetTimeAsync();
 
             actual.Epoch.ShouldBePositive();
             actual.Iso.Date.ShouldBe(DateTime.Today.Date);
+        }
+
+        public Task InitializeAsync()
+        {
+            _serviceScope = _fixture.ServiceProvider.CreateScope();
+            MarketData = _serviceScope.ServiceProvider.GetRequiredService<IMarketDataClient>();
+
+            return Task.CompletedTask;
+        }
+
+        public Task DisposeAsync()
+        {
+            _serviceScope.Dispose();
+
+            return Task.CompletedTask;
         }
     }
 }

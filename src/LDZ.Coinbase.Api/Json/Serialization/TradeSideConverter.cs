@@ -14,7 +14,6 @@ namespace LDZ.Coinbase.Api.Json.Serialization
                 "sell" => TradeSide.Sell,
                 _ => throw new JsonException()
             };
-        
 
         public override void Write(Utf8JsonWriter writer, TradeSide value, JsonSerializerOptions options)
             => throw new NotImplementedException();

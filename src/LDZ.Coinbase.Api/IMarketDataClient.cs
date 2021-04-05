@@ -15,7 +15,7 @@ namespace LDZ.Coinbase.Api
         /// <summary>
         /// Get a list of available currency pairs for trading.
         /// </summary>
-        Task<IEnumerable<Product>> GetProductsAsync(CancellationToken cancellationToken = default);
+        Task<IReadOnlyCollection<Product>> GetProductsAsync(CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Get market data for a specific currency pair.

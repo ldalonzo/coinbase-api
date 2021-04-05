@@ -3,9 +3,9 @@ name: CI
 on: [ push ]
 
 env:
-  Major: 1
+  Major: 2
   Minor: 0
-  Patch: 1
+  Patch: 0
   BuildConfiguration: 'Release'
 
 jobs:
@@ -16,7 +16,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
-        clean: true        
+        clean: true
 
     - name: Set Version
       if: ${{ github.ref == 'refs/heads/master' }}
@@ -27,7 +27,7 @@ jobs:
     - name: Set Version
       if: ${{ github.ref != 'refs/heads/master' }}
       run: |
-        echo "version=$Major.$Minor.$Patch-preview" >> $GITHUB_ENV
+        echo "version=$Major.$Minor.$Patch-preview2" >> $GITHUB_ENV
         echo "assembly_version=$Major.$Minor.$Patch.$GITHUB_RUN_NUMBER" >> $GITHUB_ENV
 
     - name: Setup .NET
@@ -43,7 +43,11 @@ jobs:
         dotnet build --configuration $BuildConfiguration --no-restore -p:Version=${{ env.version }} -p:AssemblyVersion=${{ env.assembly_version }}
 
     - name: Test
-      run: dotnet test --configuration $BuildConfiguration --no-build --collect:"XPlat Code Coverage"
+      env:
+        CoinbaseApiKey__Key: ${{ secrets.COINBASEAPIKEY__KEY }}
+        CoinbaseApiKey__Passphrase: ${{ secrets.COINBASEAPIKEY__PASSPHRASE }}
+        CoinbaseApiKey__Secret: ${{ secrets.COINBASEAPIKEY__SECRET }}
+      run: dotnet test --configuration $BuildConfiguration --no-build --collect:"XPlat Code Coverage" --logger:"console;verbosity=detailed"
 
     - name: Pack
       run: |

@@ -6,12 +6,12 @@ namespace LDZ.Coinbase.Api.Model.MarketData
     public class AggregatedProductOrderBook
     {
         [JsonPropertyName("sequence")]
-        public int Sequence { get; set; }
+        public long Sequence { get; set; }
         
         [JsonPropertyName("bids")]
-        public IEnumerable<AggregatedProductOrder> Bids { get; set; }
+        public IEnumerable<AggregatedProductOrder>? Bids { get; set; }
 
         [JsonPropertyName("asks")]
-        public IEnumerable<AggregatedProductOrder> Asks { get; set; }
+        public IEnumerable<AggregatedProductOrder>? Asks { get; set; }
     }
 }

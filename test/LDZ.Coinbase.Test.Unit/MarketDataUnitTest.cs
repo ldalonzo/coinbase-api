@@ -6,7 +6,6 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using AutoFixture.Xunit2;
 using LDZ.Coinbase.Api;
-using LDZ.Coinbase.Api.DependencyInjection;
 using LDZ.Coinbase.Api.Model.MarketData;
 using Microsoft.Extensions.DependencyInjection;
 using RichardSzalay.MockHttp;
@@ -25,7 +24,7 @@ namespace LDZ.Coinbase.Test.Unit
                 .When(HttpMethod.Get, "https://api.pro.coinbase.com/products")
                 .Respond("application/json", await File.ReadAllTextAsync("TestData/products.json"));
 
-            var client = CreateClient(mockHttp);
+            var client = CreateMarketDataClient(mockHttp);
             var actual = await client.GetProductsAsync();
 
             Assert.Contains(actual, p => p.Id == "BTC-EUR");
@@ -40,7 +39,7 @@ namespace LDZ.Coinbase.Test.Unit
                 .When(HttpMethod.Get, $"https://api.pro.coinbase.com/products/{productId}")
                 .Respond("application/json", await File.ReadAllTextAsync($"TestData/products_{productId}.json"));
 
-            var client = CreateClient(mockHttp);
+            var client = CreateMarketDataClient(mockHttp);
             var actual = await client.GetProductAsync(productId);
 
             Assert.NotNull(actual);
@@ -70,7 +69,7 @@ namespace LDZ.Coinbase.Test.Unit
                     "application/json",
                     await File.ReadAllTextAsync($"TestData/products_{productId}_trades.json"));
 
-            var client = CreateClient(mockHttp);
+            var client = CreateMarketDataClient(mockHttp);
             var actual = await client.GetTradesAsync(productId);
 
             Assert.NotEmpty(actual);
@@ -78,6 +77,7 @@ namespace LDZ.Coinbase.Test.Unit
             Assert.Equal(before, actual.Before);
 
             var actualTrade = actual.FirstOrDefault(a => a.TradeId == 73);
+            actualTrade.ShouldNotBeNull();
             Assert.Equal(TradeSide.Sell, actualTrade.Side);
             Assert.Equal(100m, actualTrade.Price);
             Assert.Equal(0.01m, actualTrade.Size);
@@ -95,7 +95,7 @@ namespace LDZ.Coinbase.Test.Unit
                     "application/json",
                     await File.ReadAllTextAsync($"TestData/products_{productId}_book.json"));
 
-            var client = CreateClient(mockHttp);
+            var client = CreateMarketDataClient(mockHttp);
             var actual = await client.GetProductOrderBookAsync(productId);
 
             actual.Sequence.ShouldBe(3);
@@ -120,9 +120,9 @@ namespace LDZ.Coinbase.Test.Unit
                 .When(HttpMethod.Get, $"https://api.pro.coinbase.com/products/{productId}/book?level=2")
                 .Respond(
                     "application/json",
-                    await File.ReadAllTextAsync($"TestData/products_{productId}_book_level2.json"));
+                    await File.ReadAllTextAsync($"TestData/get_products_{productId}_book_level2.json"));
 
-            var client = CreateClient(mockHttp);
+            var client = CreateMarketDataClient(mockHttp);
             var actual = await client.GetProductOrderBookAsync(productId, AggregatedProductOrderBookLevel.LevelTwo);
 
             actual.Sequence.ShouldBePositive();
@@ -144,7 +144,7 @@ namespace LDZ.Coinbase.Test.Unit
                     "application/json",
                     await File.ReadAllTextAsync("TestData/time.json"));
 
-            var client = CreateClient(mockHttp);
+            var client = CreateMarketDataClient(mockHttp);
 
             var actual = await client.GetTimeAsync();
 
@@ -152,13 +152,7 @@ namespace LDZ.Coinbase.Test.Unit
             actual.Iso.ShouldBe(DateTime.Parse("2015-01-07T23:47:25.201Z"));
         }
 
-        private static IMarketDataClient CreateClient(MockHttpMessageHandler mockHttp)
-            => CreateClient(mockHttp, new ServiceCollection());
-
-        private static IMarketDataClient CreateClient(MockHttpMessageHandler mockHttp, IServiceCollection services) => services
-            .AddMarketDataClient()
-            .AddMockHttpClient(mockHttp)
-            .BuildServiceProvider()
-            .GetRequiredService<IMarketDataClient>();
+        private static IMarketDataClient CreateMarketDataClient(MockHttpMessageHandler mockHttp)
+            => new ServiceCollection().CreateClient<IMarketDataClient>(mockHttp);
     }
 }

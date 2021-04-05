@@ -3,7 +3,7 @@ using System.Net.Http.Headers;
 
 namespace LDZ.Coinbase.Api.Net.Http.Headers
 {
-    public static class HttpHeadersExtensions
+    internal static class HttpHeadersExtensions
     {
         public static bool TryParseInt(this HttpHeaders headers, string headerName, out int value)
         {

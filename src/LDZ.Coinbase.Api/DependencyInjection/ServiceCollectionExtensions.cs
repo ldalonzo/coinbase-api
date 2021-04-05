@@ -1,5 +1,11 @@
 ﻿using System;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using LDZ.Coinbase.Api.Hosting;
+using LDZ.Coinbase.Api.Json.Serialization;
+using LDZ.Coinbase.Api.Net;
 using LDZ.Coinbase.Api.Net.Http;
+using LDZ.Coinbase.Api.Net.Http.Headers;
 using LDZ.Coinbase.Api.Options;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -8,30 +14,65 @@ namespace LDZ.Coinbase.Api.DependencyInjection
 {
     public static class ServiceCollectionExtensions
     {
-        public static IServiceCollection AddMarketDataClient(this IServiceCollection services, Action<OptionsBuilder<CoinbaseClientOptions>> configure)
+        public static IServiceCollection AddCoinbaseProRestApi(this IServiceCollection services, Action<ICoinbaseApiBuilder>? configure = null, Action<OptionsBuilder<CoinbaseApiOptions>>? configureOptions = null)
         {
-            services
-                .AddTransient<IMarketDataClient, MarketDataClient>()
-                .AddSingleton<ThrottlingPolicy>()
-                .AddTransient<ThrottlingPolicyHandler>();
+            if (services == null)
+            {
+                throw new ArgumentNullException(nameof(services));
+            }
 
-            configure(services.AddOptions<CoinbaseClientOptions>());
-
-            services
-                .AddHttpClient(ClientNames.MarketData, (provider, client) =>
-                {
-                    client.BaseAddress = provider.GetRequiredService<IOptions<CoinbaseClientOptions>>().Value.BaseAddress;
-                    client.DefaultRequestHeaders.Add("User-Agent", "CoinbaseProClient");
-                })
-                .AddHttpMessageHandler<ThrottlingPolicyHandler>();
+            var builder = services.AddCoinbaseProRestApi(configureOptions ?? (b => b.UseProduction()));
+            configure?.Invoke(builder);
 
             return services;
         }
 
-        public static IServiceCollection AddMarketDataClient(this IServiceCollection services) => services
-            .AddMarketDataClient(builder => builder.Configure(o =>
+        public static ICoinbaseApiBuilder AddCoinbaseProRestApi(this IServiceCollection services, Action<OptionsBuilder<CoinbaseApiOptions>> configureOptions)
+        {
+            if (services == null)
             {
-                o.BaseAddress = new Uri("https://api.pro.coinbase.com", UriKind.Absolute);
-            }));
+                throw new ArgumentNullException(nameof(services));
+            }
+
+            services
+                .Configure<JsonSerializerOptions>(jsonOptions =>
+                {
+                    jsonOptions.Converters.Add(new AggregatedOrderJsonConverter());
+                    jsonOptions.Converters.Add(new DecimalConverter());
+                    jsonOptions.Converters.Add(new OrderSideConverter());
+                    jsonOptions.Converters.Add(new OrderTypeConverter());
+                    jsonOptions.Converters.Add(new TradeSideConverter());
+
+                    jsonOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+                });
+
+            services
+                .AddTransient<IMarketDataClient, MarketDataClient>()
+                .AddTransient<ITradingClient, TradingClient>()
+                .AddSingleton<ThrottlingPolicy>()
+                .AddTransient<ThrottlingPolicyHandler>()
+                .AddTransient<MessageAuthenticationCodeHandler>();
+
+            services
+                .AddHttpClient(ClientNames.MarketData, (provider, client) =>
+                {
+                    client.BaseAddress = provider.GetRequiredService<IOptions<CoinbaseApiOptions>>().Value.RestApiBaseUri;
+                    client.DefaultRequestHeaders.AddCoinbaseUserAgent();
+                })
+                .AddHttpMessageHandler<ThrottlingPolicyHandler>();
+
+            services
+                .AddHttpClient(ClientNames.TradingClient, (provider, client) =>
+                {
+                    client.BaseAddress = provider.GetRequiredService<IOptions<CoinbaseApiOptions>>().Value.RestApiBaseUri;
+                    client.DefaultRequestHeaders.AddCoinbaseUserAgent();
+                })
+                .AddHttpMessageHandler<MessageAuthenticationCodeHandler>();
+
+            var options = services.AddOptions<CoinbaseApiOptions>();
+            configureOptions(options);
+
+            return new CoinbaseApiBuilder(services);
+        }
     }
 }

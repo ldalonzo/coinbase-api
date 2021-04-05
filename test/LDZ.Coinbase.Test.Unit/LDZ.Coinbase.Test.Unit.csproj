@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>net5.0</TargetFramework>
@@ -8,7 +8,7 @@
 
     <ItemGroup>
         <PackageReference Include="AutoFixture.Xunit2" Version="4.15.0" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.1" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
         <PackageReference Include="Moq" Version="4.16.1" />
         <PackageReference Include="RichardSzalay.MockHttp" Version="6.0.0" />
         <PackageReference Include="Shouldly" Version="4.0.3" />
@@ -28,6 +28,21 @@
     </ItemGroup>
 
     <ItemGroup>
+        <None Update="TestData\delete_orders.json">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="TestData\get_orders.json">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="TestData\new-order-request_d0c5340b-6d6c-49d9-b567-48c4bfca13d2.json">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="TestData\get_orders_68e6a28f-ae28-4788-8d4f-5ab4e5e5ae08.json">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="TestData\get_orders_d0c5340b-6d6c-49d9-b567-48c4bfca13d2.json">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
         <None Update="TestData\products.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
@@ -37,7 +52,7 @@
         <None Update="TestData\products_BTC-USD_book.json">
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-        <None Update="TestData\products_BTC-USD_book_level2.json">
+        <None Update="TestData\get_products_BTC-USD_book_level2.json">
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
         <None Update="TestData\products_BTC-USD_trades.json">
