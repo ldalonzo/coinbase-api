@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
@@ -34,10 +35,23 @@ namespace LDZ.Coinbase.Feed.Test.Unit
                     Products = new List<string> {"ETH-EUR"}
                 }}
             };
-            var json = JsonSerializer.Serialize<FeedMessage>(message, SerializerOptions);
+
+            var json = JsonSerializer.Serialize<FeedRequestMessage>(message, SerializerOptions);
 
             var expected = await File.ReadAllTextAsync("TestData/subscribe_heartbeat.json");
             json.ShouldBe(expected);
+        }
+
+        [Fact]
+        public async Task DeserializeHeartbeatMessage()
+        {
+            var actual = JsonSerializer.Deserialize<FeedResponseMessage>(await File.ReadAllTextAsync("TestData/message_heartbeat.json"), SerializerOptions);
+
+            var message = actual.ShouldBeOfType<HeartbeatMessage>();
+            message.ProductId.ShouldBe("BTC-USD");
+            message.Time.ShouldBe(DateTime.Parse("2014-11-07T08:19:28.464459Z"));
+            message.LastTradeId.ShouldBe(20);
+            message.Sequence.ShouldBe(90);
         }
     }
 }

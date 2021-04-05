@@ -66,18 +66,19 @@ namespace LDZ.Coinbase.Api.DependencyInjection
         }
 
         public static IServiceCollection ConfigureCoinbaseSerializerOptions(this IServiceCollection services) =>
-            services.Configure<JsonSerializerOptions>(jsonOptions =>
+            services.Configure<JsonSerializerOptions>(options =>
             {
-                jsonOptions.Converters.Add(new AggregatedOrderJsonConverter());
-                jsonOptions.Converters.Add(new DecimalConverter());
-                jsonOptions.Converters.Add(new OrderSideConverter());
-                jsonOptions.Converters.Add(new OrderTypeConverter());
-                jsonOptions.Converters.Add(new TradeSideConverter());
+                options.Converters.Add(new AggregatedOrderJsonConverter());
+                options.Converters.Add(new DecimalConverter());
+                options.Converters.Add(new OrderSideConverter());
+                options.Converters.Add(new OrderTypeConverter());
+                options.Converters.Add(new TradeSideConverter());
 
-                jsonOptions.Converters.Add(new ChannelSubscriptionConverter());
-                jsonOptions.Converters.Add(new FeedMessageConverter());
+                options.Converters.Add(new ChannelSubscriptionConverter());
+                options.Converters.Add(new FeedRequestMessageConverter());
+                options.Converters.Add(new FeedResponseMessageConverter());
 
-                jsonOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+                options.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
             });
     }
 }

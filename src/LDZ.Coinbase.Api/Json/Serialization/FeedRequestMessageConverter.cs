@@ -5,14 +5,14 @@ using LDZ.Coinbase.Api.Model.Feed;
 
 namespace LDZ.Coinbase.Api.Json.Serialization
 {
-    internal class FeedMessageConverter : JsonConverter<FeedMessage>
+    internal class FeedRequestMessageConverter : JsonConverter<FeedRequestMessage>
     {
-        public override FeedMessage? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        public override FeedRequestMessage? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             throw new NotImplementedException();
         }
 
-        public override void Write(Utf8JsonWriter writer, FeedMessage value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, FeedRequestMessage value, JsonSerializerOptions options)
         {
             writer.WriteStartObject();
 

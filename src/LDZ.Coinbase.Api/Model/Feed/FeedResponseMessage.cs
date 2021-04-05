@@ -1,6 +1,6 @@
 ﻿namespace LDZ.Coinbase.Api.Model.Feed
 {
-    public abstract class FeedMessage
+    public abstract class FeedResponseMessage 
     {
     }
 }
