@@ -5,7 +5,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using LDZ.Coinbase.Api.DependencyInjection;
 using LDZ.Coinbase.Api.Model.Feed;
-using LDZ.Coinbase.Api.Model.Feed.Channel;
+using LDZ.Coinbase.Api.Model.Feed.Channels;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Shouldly;
@@ -30,7 +30,7 @@ namespace LDZ.Coinbase.Feed.Test.Unit
         {
             var message = new SubscribeMessage
             {
-                Channels = new List<ChannelSubscription> {new HeartbeatChannel
+                Channels = new List<Channel> {new HeartbeatChannel
                 {
                     Products = new List<string> {"ETH-EUR"}
                 }}
@@ -47,7 +47,7 @@ namespace LDZ.Coinbase.Feed.Test.Unit
         {
             var message = new SubscribeMessage
             {
-                Channels = new List<ChannelSubscription> {new TickerChannel
+                Channels = new List<Channel> {new TickerChannel
                 {
                     Products = new List<string> {"ETH-EUR","BTC-USD"}
                 }}
@@ -87,10 +87,23 @@ namespace LDZ.Coinbase.Feed.Test.Unit
             var actual = JsonSerializer.Deserialize<FeedResponseMessage>(await File.ReadAllTextAsync("TestData/message_heartbeat.json"), SerializerOptions);
 
             var message = actual.ShouldBeOfType<HeartbeatMessage>();
-            message.ProductId.ShouldBe("BTC-USD");
-            message.Time.ShouldBe(DateTime.Parse("2014-11-07T08:19:28.464459Z"));
-            message.LastTradeId.ShouldBe(20);
             message.Sequence.ShouldBe(90);
+            message.ProductId.ShouldBe("BTC-USD");
+            message.Time.ShouldBe(DateTimeOffset.Parse("2014-11-07T08:19:28.464459Z"));
+            message.LastTradeId.ShouldBe(20);
+        }
+
+        [Fact]
+        public async Task DeserializeTickerMessage()
+        {
+            var actual = JsonSerializer.Deserialize<FeedResponseMessage>(await File.ReadAllTextAsync("TestData/message_ticker.json"), SerializerOptions);
+
+            var message = actual.ShouldBeOfType<TickerMessage>();
+            message.Sequence.ShouldBe(6469324659);
+            message.ProductId.ShouldBe("ETH-EUR");
+            message.Time.ShouldBe(DateTimeOffset.Parse("2021-04-06T20:47:44.767292Z"));
+            message.TradeId.ShouldBe(17108801);
+            message.Price.ShouldBe(1785.08m);
         }
     }
 }

@@ -1,12 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Text;
 
-namespace LDZ.Coinbase.Api.Model.Feed.Channel
+namespace LDZ.Coinbase.Api.Model.Feed.Channels
 {
     /// <summary>
-    /// 
+    /// The ticker channel provides real-time price updates every time a match happens.
+    /// It batches updates in case of cascading matches, greatly reducing bandwidth requirements.
     /// </summary>
-    public class TickerChannel : ChannelSubscription
+    public class TickerChannel : Channel
     {
         public ICollection<string>? Products { get; set; }
 

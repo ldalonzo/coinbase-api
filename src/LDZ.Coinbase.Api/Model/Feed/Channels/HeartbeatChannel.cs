@@ -1,13 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Text;
 
-namespace LDZ.Coinbase.Api.Model.Feed.Channel
+namespace LDZ.Coinbase.Api.Model.Feed.Channels
 {
     /// <summary>
     /// To receive <see cref="HeartbeatMessage">heartbeat messages</see> for specific <see cref="Products"/> once a second subscribe
     /// to the heartbeat channel.
     /// </summary>
-    public class HeartbeatChannel : ChannelSubscription
+    public class HeartbeatChannel : Channel
     {
         public ICollection<string>? Products { get; set; }
 

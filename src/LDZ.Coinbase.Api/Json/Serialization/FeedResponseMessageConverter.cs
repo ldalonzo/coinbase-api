@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using LDZ.Coinbase.Api.Model.Feed;
-using LDZ.Coinbase.Api.Model.Feed.Channel;
+using LDZ.Coinbase.Api.Model.Feed.Channels;
 
 namespace LDZ.Coinbase.Api.Json.Serialization
 {
@@ -39,6 +39,7 @@ namespace LDZ.Coinbase.Api.Json.Serialization
             {
                 FeedResponseMessageNames.Heartbeat => ReadHeartbeatMessage(ref reader, options, new HeartbeatMessage()),
                 FeedResponseMessageNames.Subscriptions => ReadSubscriptionsMessage(ref reader, options, new SubscriptionsMessage()),
+                FeedResponseMessageNames.Ticker => ReadTickerMessage(ref reader, options, new TickerMessage()),
                 _ => throw new JsonException($"Message of type \"{messageType}\" is NOT supported.")
             };
         }
@@ -97,7 +98,7 @@ namespace LDZ.Coinbase.Api.Json.Serialization
                     {
                         case "channels":
 
-                            value.Channels = new List<ChannelSubscription>();
+                            value.Channels = new List<Channel>();
 
                             reader.Read();
                             if (reader.TokenType != JsonTokenType.StartArray)
@@ -108,10 +109,52 @@ namespace LDZ.Coinbase.Api.Json.Serialization
                             reader.Read();
                             while (reader.TokenType != JsonTokenType.EndArray)
                             {
-                                value.Channels.Add(JsonSerializer.Deserialize<ChannelSubscription>(ref reader, options));
+                                value.Channels.Add(JsonSerializer.Deserialize<Channel>(ref reader, options));
                                 reader.Read();
                             }
 
+                            break;
+                    }
+                }
+            }
+
+            throw new JsonException();
+        }
+
+        private static FeedResponseMessage ReadTickerMessage(ref Utf8JsonReader reader, JsonSerializerOptions options, TickerMessage value)
+        {
+            while (reader.Read())
+            {
+                if (reader.TokenType == JsonTokenType.EndObject)
+                {
+                    return value;
+                }
+
+                if (reader.TokenType == JsonTokenType.PropertyName)
+                {
+                    var propertyName = reader.GetString();
+
+                    reader.Read();
+                    switch (propertyName)
+                    {
+                        case "product_id":
+                            value.ProductId = reader.GetString();
+                            break;
+
+                        case "time":
+                            value.Time = reader.GetDateTime();
+                            break;
+
+                        case "trade_id":
+                            value.TradeId = reader.GetInt64();
+                            break;
+
+                        case "price":
+                            value.Price = JsonSerializer.Deserialize<decimal>(ref reader, options);
+                            break;
+
+                        case "sequence":
+                            value.Sequence = reader.GetInt64();
                             break;
                     }
                 }

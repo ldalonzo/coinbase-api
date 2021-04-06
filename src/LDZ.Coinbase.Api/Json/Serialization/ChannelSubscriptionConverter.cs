@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using LDZ.Coinbase.Api.Model.Feed.Channel;
+using LDZ.Coinbase.Api.Model.Feed.Channels;
 
 namespace LDZ.Coinbase.Api.Json.Serialization
 {
-    internal class ChannelSubscriptionConverter : JsonConverter<ChannelSubscription>
+    internal class ChannelSubscriptionConverter : JsonConverter<Channel>
     {
         private const string Name = "name";
 
-        public override ChannelSubscription? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        public override Channel? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             if (reader.TokenType != JsonTokenType.StartObject)
             {
@@ -43,7 +43,7 @@ namespace LDZ.Coinbase.Api.Json.Serialization
             };
         }
 
-        public override void Write(Utf8JsonWriter writer, ChannelSubscription value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, Channel value, JsonSerializerOptions options)
         {
             writer.WriteStartObject();
 
@@ -62,7 +62,7 @@ namespace LDZ.Coinbase.Api.Json.Serialization
             writer.WriteEndObject();
         }
 
-        private static ChannelSubscription Read(ref Utf8JsonReader reader,  HeartbeatChannel value, JsonSerializerOptions options)
+        private static Channel Read(ref Utf8JsonReader reader,  HeartbeatChannel value, JsonSerializerOptions options)
         {
             while (reader.Read())
             {
@@ -85,7 +85,7 @@ namespace LDZ.Coinbase.Api.Json.Serialization
             throw new JsonException();
         }
 
-        private static ChannelSubscription Read(ref Utf8JsonReader reader, TickerChannel value, JsonSerializerOptions options)
+        private static Channel Read(ref Utf8JsonReader reader, TickerChannel value, JsonSerializerOptions options)
         {
             while (reader.Read())
             {

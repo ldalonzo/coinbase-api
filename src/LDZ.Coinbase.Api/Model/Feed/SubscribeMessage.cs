@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
-using LDZ.Coinbase.Api.Model.Feed.Channel;
+using LDZ.Coinbase.Api.Model.Feed.Channels;
 
 namespace LDZ.Coinbase.Api.Model.Feed
 {
     public class SubscribeMessage : FeedRequestMessage
     {
-        public ICollection<ChannelSubscription>? Channels { get; set; }
+        public ICollection<Channel>? Channels { get; set; }
     }
 }
