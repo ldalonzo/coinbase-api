@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using LDZ.Coinbase.Api.Model.Feed.Channel;
@@ -39,6 +38,7 @@ namespace LDZ.Coinbase.Api.Json.Serialization
             return messageType switch
             {
                 ChannelSubscriptionNames.Heartbeat => Read(ref reader, new HeartbeatChannel(), options),
+                ChannelSubscriptionNames.Ticker => Read(ref reader, new TickerChannel(), options),
                 _ => throw new JsonException()
             };
         }
@@ -74,35 +74,35 @@ namespace LDZ.Coinbase.Api.Json.Serialization
                 if (reader.TokenType == JsonTokenType.PropertyName)
                 {
                     var propertyName = reader.GetString();
-
-                    reader.Read();
-                    switch (propertyName)
+                    value.Products = propertyName switch
                     {
-                        case "product_ids":
+                        Utf8JsonWriterExtensions.ProductIds => Utf8JsonWriterExtensions.ReadProducts(ref reader, options),
+                        _ => value.Products
+                    };
+                }
+            }
 
-                            value.Products = new List<string>();
+            throw new JsonException();
+        }
 
-                            if (reader.TokenType != JsonTokenType.StartArray)
-                            {
-                                throw new JsonException();
-                            }
-
-                            reader.Read();
-                            while (reader.TokenType != JsonTokenType.EndArray)
-                            {
-                                if (reader.TokenType != JsonTokenType.String)
-                                {
-                                    throw new JsonException();
-                                }
-
-                                value.Products.Add(reader.GetString());
-                                reader.Read();
-                            }
-
-                            break;
-                    }
+        private static ChannelSubscription Read(ref Utf8JsonReader reader, TickerChannel value, JsonSerializerOptions options)
+        {
+            while (reader.Read())
+            {
+                if (reader.TokenType == JsonTokenType.EndObject)
+                {
+                    return value;
                 }
 
+                if (reader.TokenType == JsonTokenType.PropertyName)
+                {
+                    var propertyName = reader.GetString();
+                    value.Products = propertyName switch
+                    {
+                        Utf8JsonWriterExtensions.ProductIds => Utf8JsonWriterExtensions.ReadProducts(ref reader, options),
+                        _ => value.Products
+                    };
+                }
             }
 
             throw new JsonException();

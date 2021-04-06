@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using LDZ.Coinbase.Api.Model.Feed.Channel;
 
@@ -17,10 +16,7 @@ namespace LDZ.Coinbase.Api.Model.Feed
 
             if (Channels != null)
             {
-                foreach (var channel in Channels)
-                {
-                    sb.Append(channel);
-                }
+                sb.AppendJoin(", ", Channels);
             }
 
             sb.Append(" ]");

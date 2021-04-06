@@ -60,14 +60,25 @@ namespace LDZ.Coinbase.Feed.Test.Unit
         }
 
         [Fact]
-        public async Task DeserializeSubscriptionsMessage()
+        public async Task DeserializeSubscriptionsMessageHeartbeatChannel()
         {
-            var actual = JsonSerializer.Deserialize<FeedResponseMessage>(await File.ReadAllTextAsync("TestData/message_subscriptions.json"), SerializerOptions);
+            var actual = JsonSerializer.Deserialize<FeedResponseMessage>(await File.ReadAllTextAsync("TestData/message_subscriptions_heartbeat.json"), SerializerOptions);
 
             var message = actual.ShouldBeOfType<SubscriptionsMessage>();
             message.Channels.ShouldNotBeNull();
             var channel = message.Channels.ShouldHaveSingleItem().ShouldBeOfType<HeartbeatChannel>();
             channel.Products.ShouldHaveSingleItem().ShouldBe("ETH-EUR");
+        }
+
+        [Fact]
+        public async Task DeserializeSubscriptionsMessageTickerChannel()
+        {
+            var actual = JsonSerializer.Deserialize<FeedResponseMessage>(await File.ReadAllTextAsync("TestData/message_subscriptions_ticker.json"), SerializerOptions);
+
+            var message = actual.ShouldBeOfType<SubscriptionsMessage>();
+            message.Channels.ShouldNotBeNull();
+            var channel = message.Channels.ShouldHaveSingleItem().ShouldBeOfType<TickerChannel>();
+            channel.Products.ShouldHaveSingleItem().ShouldBe("BTC-USD");
         }
 
         [Fact]
