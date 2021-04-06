@@ -30,7 +30,7 @@ namespace LDZ.Coinbase.Feed.Test.Unit
         {
             var message = new SubscribeMessage
             {
-                Channels = new List<ChannelSubscription> {new HeartbeatChannelSubscription
+                Channels = new List<ChannelSubscription> {new HeartbeatChannel
                 {
                     Products = new List<string> {"ETH-EUR"}
                 }}
@@ -43,13 +43,30 @@ namespace LDZ.Coinbase.Feed.Test.Unit
         }
 
         [Fact]
+        public async Task SerializeSubscribeMessageTickerChannel()
+        {
+            var message = new SubscribeMessage
+            {
+                Channels = new List<ChannelSubscription> {new TickerChannel
+                {
+                    Products = new List<string> {"ETH-EUR","BTC-USD"}
+                }}
+            };
+
+            var json = JsonSerializer.Serialize<FeedRequestMessage>(message, SerializerOptions);
+
+            var expected = await File.ReadAllTextAsync("TestData/subscribe_ticker.json");
+            json.ShouldBe(expected);
+        }
+
+        [Fact]
         public async Task DeserializeSubscriptionsMessage()
         {
             var actual = JsonSerializer.Deserialize<FeedResponseMessage>(await File.ReadAllTextAsync("TestData/message_subscriptions.json"), SerializerOptions);
 
             var message = actual.ShouldBeOfType<SubscriptionsMessage>();
             message.Channels.ShouldNotBeNull();
-            var channel = message.Channels.ShouldHaveSingleItem().ShouldBeOfType<HeartbeatChannelSubscription>();
+            var channel = message.Channels.ShouldHaveSingleItem().ShouldBeOfType<HeartbeatChannel>();
             channel.Products.ShouldHaveSingleItem().ShouldBe("ETH-EUR");
         }
 

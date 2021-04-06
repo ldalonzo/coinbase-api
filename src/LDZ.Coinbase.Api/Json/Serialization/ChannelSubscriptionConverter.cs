@@ -8,6 +8,8 @@ namespace LDZ.Coinbase.Api.Json.Serialization
 {
     internal class ChannelSubscriptionConverter : JsonConverter<ChannelSubscription>
     {
+        private const string Name = "name";
+
         public override ChannelSubscription? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             if (reader.TokenType != JsonTokenType.StartObject)
@@ -22,7 +24,7 @@ namespace LDZ.Coinbase.Api.Json.Serialization
             }
 
             var propertyName = reader.GetString();
-            if (propertyName != "name")
+            if (propertyName != Name)
             {
                 throw new JsonException();
             }
@@ -36,7 +38,7 @@ namespace LDZ.Coinbase.Api.Json.Serialization
             var messageType = reader.GetString();
             return messageType switch
             {
-                ChannelSubscriptionNames.Heartbeat => Read(ref reader, new HeartbeatChannelSubscription(), options),
+                ChannelSubscriptionNames.Heartbeat => Read(ref reader, new HeartbeatChannel(), options),
                 _ => throw new JsonException()
             };
         }
@@ -45,27 +47,22 @@ namespace LDZ.Coinbase.Api.Json.Serialization
         {
             writer.WriteStartObject();
 
-            if (value is HeartbeatChannelSubscription heartbeatCh)
+            if (value is HeartbeatChannel heartbeat)
             {
-                writer.WriteString("name", ChannelSubscriptionNames.Heartbeat);
+                writer.WriteString(Name, ChannelSubscriptionNames.Heartbeat);
+                writer.WriteProducts(heartbeat.Products);
+            }
 
-                if (heartbeatCh.Products != null)
-                {
-                    writer.WriteStartArray("product_ids");
-
-                    foreach (var id in heartbeatCh.Products)
-                    {
-                        writer.WriteStringValue(id);
-                    }
-                }
-
-                writer.WriteEndArray();
+            if (value is TickerChannel ticker)
+            {
+                writer.WriteString(Name, ChannelSubscriptionNames.Ticker);
+                writer.WriteProducts(ticker.Products);
             }
 
             writer.WriteEndObject();
         }
 
-        private static ChannelSubscription Read(ref Utf8JsonReader reader,  HeartbeatChannelSubscription value, JsonSerializerOptions options)
+        private static ChannelSubscription Read(ref Utf8JsonReader reader,  HeartbeatChannel value, JsonSerializerOptions options)
         {
             while (reader.Read())
             {

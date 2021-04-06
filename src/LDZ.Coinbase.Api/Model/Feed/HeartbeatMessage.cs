@@ -3,6 +3,10 @@ using System.Text;
 
 namespace LDZ.Coinbase.Api.Model.Feed
 {
+    /// <summary>
+    /// Heartbeats also include <see cref="Sequence">sequence numbers</see> and <see cref="LastTradeId">last trade ids</see> that can be used
+    /// to verify no messages were missed.
+    /// </summary>
     public class HeartbeatMessage : FeedResponseMessage
     {
         public string? ProductId { get; set; }
@@ -15,9 +19,8 @@ namespace LDZ.Coinbase.Api.Model.Feed
 
         public override string ToString()
         {
-            var sb = new StringBuilder();
+            var sb = new StringBuilder("HB");
 
-            sb.Append("HB");
             if (ProductId != null)
             {
                 sb.Append($" {ProductId}");
@@ -26,6 +29,11 @@ namespace LDZ.Coinbase.Api.Model.Feed
             if (Sequence != null)
             {
                 sb.Append($" #{Sequence}");
+            }
+
+            if (Time != null)
+            {
+                sb.Append($" {Time:HH:mm:ss.fff}");
             }
 
             return sb.ToString();

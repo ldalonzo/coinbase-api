@@ -3,5 +3,6 @@
     internal static class ChannelSubscriptionNames
     {
         public const string Heartbeat = "heartbeat";
+        public const string Ticker = "ticker";
     }
 }
