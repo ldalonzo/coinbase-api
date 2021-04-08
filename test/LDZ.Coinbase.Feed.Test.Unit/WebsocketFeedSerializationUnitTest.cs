@@ -60,6 +60,23 @@ namespace LDZ.Coinbase.Feed.Test.Unit
         }
 
         [Fact]
+        public async Task SerializeSubscribeMessageLevel2Channel()
+        {
+            var message = new SubscribeMessage
+            {
+                Channels = new List<Channel> {new Level2Channel
+                {
+                    Products = new List<string> {"XTZ-EUR"}
+                }}
+            };
+
+            var json = JsonSerializer.Serialize<FeedRequestMessage>(message, SerializerOptions);
+
+            var expected = await File.ReadAllTextAsync("TestData/subscribe_level2.json");
+            json.ShouldBe(expected);
+        }
+
+        [Fact]
         public async Task DeserializeSubscriptionsMessageHeartbeatChannel()
         {
             var actual = JsonSerializer.Deserialize<FeedResponseMessage>(await File.ReadAllTextAsync("TestData/message_subscriptions_heartbeat.json"), SerializerOptions);

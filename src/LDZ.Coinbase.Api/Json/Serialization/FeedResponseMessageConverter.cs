@@ -37,135 +37,184 @@ namespace LDZ.Coinbase.Api.Json.Serialization
             var messageType = reader.GetString();
             return messageType switch
             {
-                FeedResponseMessageNames.Heartbeat => ReadHeartbeatMessage(ref reader, options, new HeartbeatMessage()),
-                FeedResponseMessageNames.Subscriptions => ReadSubscriptionsMessage(ref reader, options, new SubscriptionsMessage()),
-                FeedResponseMessageNames.Ticker => ReadTickerMessage(ref reader, options, new TickerMessage()),
+                FeedResponseMessageNames.Heartbeat => HeartbeatMessageConverter.Deserialize(ref reader, options),
+                FeedResponseMessageNames.Subscriptions => SubscriptionsMessageConverter.Deserialize(ref reader, options),
+                FeedResponseMessageNames.Ticker => TickerMessageConverter.Deserialize(ref reader, options),
                 _ => throw new JsonException($"Message of type \"{messageType}\" is NOT supported.")
             };
-        }
-
-        private static FeedResponseMessage ReadHeartbeatMessage(ref Utf8JsonReader reader, JsonSerializerOptions options, HeartbeatMessage value)
-        {
-            while (reader.Read())
-            {
-                if (reader.TokenType == JsonTokenType.EndObject)
-                {
-                    return value;
-                }
-
-                if (reader.TokenType == JsonTokenType.PropertyName)
-                {
-                    var propertyName = reader.GetString();
-
-                    reader.Read();
-                    switch (propertyName)
-                    {
-                        case "product_id":
-                            value.ProductId = reader.GetString();
-                            break;
-
-                        case "time":
-                            value.Time = reader.GetDateTime();
-                            break;
-
-                        case "last_trade_id":
-                            value.LastTradeId = reader.GetInt64();
-                            break;
-
-                        case "sequence":
-                            value.Sequence = reader.GetInt64();
-                            break;
-                    }
-                }
-
-            }
-
-            throw new JsonException();
-        }
-
-        private static FeedResponseMessage ReadSubscriptionsMessage(ref Utf8JsonReader reader, JsonSerializerOptions options, SubscriptionsMessage value)
-        {
-            while (reader.Read())
-            {
-                if (reader.TokenType == JsonTokenType.EndObject)
-                {
-                    return value;
-                }
-
-                if (reader.TokenType == JsonTokenType.PropertyName)
-                {
-                    switch (reader.GetString())
-                    {
-                        case "channels":
-
-                            value.Channels = new List<Channel>();
-
-                            reader.Read();
-                            if (reader.TokenType != JsonTokenType.StartArray)
-                            {
-                                throw new JsonException();
-                            }
-
-                            reader.Read();
-                            while (reader.TokenType != JsonTokenType.EndArray)
-                            {
-                                value.Channels.Add(JsonSerializer.Deserialize<Channel>(ref reader, options));
-                                reader.Read();
-                            }
-
-                            break;
-                    }
-                }
-            }
-
-            throw new JsonException();
-        }
-
-        private static FeedResponseMessage ReadTickerMessage(ref Utf8JsonReader reader, JsonSerializerOptions options, TickerMessage value)
-        {
-            while (reader.Read())
-            {
-                if (reader.TokenType == JsonTokenType.EndObject)
-                {
-                    return value;
-                }
-
-                if (reader.TokenType == JsonTokenType.PropertyName)
-                {
-                    var propertyName = reader.GetString();
-
-                    reader.Read();
-                    switch (propertyName)
-                    {
-                        case "product_id":
-                            value.ProductId = reader.GetString();
-                            break;
-
-                        case "time":
-                            value.Time = reader.GetDateTime();
-                            break;
-
-                        case "trade_id":
-                            value.TradeId = reader.GetInt64();
-                            break;
-
-                        case "price":
-                            value.Price = JsonSerializer.Deserialize<decimal>(ref reader, options);
-                            break;
-
-                        case "sequence":
-                            value.Sequence = reader.GetInt64();
-                            break;
-                    }
-                }
-            }
-
-            throw new JsonException();
         }
 
         public override void Write(Utf8JsonWriter writer, FeedResponseMessage value, JsonSerializerOptions options)
         {
             throw new NotImplementedException();
+        }
+
+        private class HeartbeatMessageConverter : JsonConverter<HeartbeatMessage>
+        {
+            public static HeartbeatMessage? Deserialize(ref Utf8JsonReader reader, JsonSerializerOptions options)
+                => new HeartbeatMessageConverter().Read(ref reader, typeof(HeartbeatMessage), options);
+
+            public override HeartbeatMessage? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+            {
+                if (reader.TokenType != JsonTokenType.String)
+                {
+                    throw new JsonException();
+                }
+
+                if (reader.GetString() != FeedResponseMessageNames.Heartbeat)
+                {
+                    throw new JsonException();
+                }
+
+                var value = new HeartbeatMessage();
+
+                while (reader.Read())
+                {
+                    if (reader.TokenType == JsonTokenType.EndObject)
+                    {
+                        return value;
+                    }
+
+                    if (reader.TokenType == JsonTokenType.PropertyName)
+                    {
+                        var propertyName = reader.GetString();
+
+                        reader.Read();
+                        switch (propertyName)
+                        {
+                            case "product_id":
+                                value.ProductId = reader.GetString();
+                                break;
+
+                            case "time":
+                                value.Time = reader.GetDateTime();
+                                break;
+
+                            case "last_trade_id":
+                                value.LastTradeId = reader.GetInt64();
+                                break;
+
+                            case "sequence":
+                                value.Sequence = reader.GetInt64();
+                                break;
+                        }
+                    }
+
+                }
+
+                throw new JsonException();
+            }
+
+            public override void Write(Utf8JsonWriter writer, HeartbeatMessage value, JsonSerializerOptions options)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        private class SubscriptionsMessageConverter : JsonConverter<SubscriptionsMessage>
+        {
+            public static SubscriptionsMessage? Deserialize(ref Utf8JsonReader reader, JsonSerializerOptions options)
+                => new SubscriptionsMessageConverter().Read(ref reader, typeof(SubscriptionsMessage), options);
+
+            public override SubscriptionsMessage? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+            {
+                var value = new SubscriptionsMessage();
+
+                while (reader.Read())
+                {
+                    if (reader.TokenType == JsonTokenType.EndObject)
+                    {
+                        return value;
+                    }
+
+                    if (reader.TokenType == JsonTokenType.PropertyName)
+                    {
+                        switch (reader.GetString())
+                        {
+                            case "channels":
+
+                                value.Channels = new List<Channel>();
+
+                                reader.Read();
+                                if (reader.TokenType != JsonTokenType.StartArray)
+                                {
+                                    throw new JsonException();
+                                }
+
+                                reader.Read();
+                                while (reader.TokenType != JsonTokenType.EndArray)
+                                {
+                                    value.Channels.Add(JsonSerializer.Deserialize<Channel>(ref reader, options));
+                                    reader.Read();
+                                }
+
+                                break;
+                        }
+                    }
+                }
+
+                throw new JsonException();
+            }
+
+            public override void Write(Utf8JsonWriter writer, SubscriptionsMessage value, JsonSerializerOptions options)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        private class TickerMessageConverter : JsonConverter<TickerMessage>
+        {
+            public static TickerMessage? Deserialize(ref Utf8JsonReader reader, JsonSerializerOptions options)
+                => new TickerMessageConverter().Read(ref reader, typeof(TickerMessage), options);
+
+            public override TickerMessage? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+            {
+                var value = new TickerMessage();
+
+                while (reader.Read())
+                {
+                    if (reader.TokenType == JsonTokenType.EndObject)
+                    {
+                        return value;
+                    }
+
+                    if (reader.TokenType == JsonTokenType.PropertyName)
+                    {
+                        var propertyName = reader.GetString();
+
+                        reader.Read();
+                        switch (propertyName)
+                        {
+                            case "product_id":
+                                value.ProductId = reader.GetString();
+                                break;
+
+                            case "time":
+                                value.Time = reader.GetDateTime();
+                                break;
+
+                            case "trade_id":
+                                value.TradeId = reader.GetInt64();
+                                break;
+
+                            case "price":
+                                value.Price = JsonSerializer.Deserialize<decimal>(ref reader, options);
+                                break;
+
+                            case "sequence":
+                                value.Sequence = reader.GetInt64();
+                                break;
+                        }
+                    }
+                }
+
+                throw new JsonException();
+            }
+
+            public override void Write(Utf8JsonWriter writer, TickerMessage value, JsonSerializerOptions options)
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }
