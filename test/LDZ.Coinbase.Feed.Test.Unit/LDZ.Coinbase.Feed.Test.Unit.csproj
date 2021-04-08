@@ -29,10 +29,16 @@
     </ItemGroup>
 
     <ItemGroup>
+      <None Update="TestData\message_error.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
       <None Update="TestData\message_heartbeat.json">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
       <None Update="TestData\message_subscriptions_heartbeat.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="TestData\message_subscriptions_level2.json">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
       <None Update="TestData\message_subscriptions_ticker.json">

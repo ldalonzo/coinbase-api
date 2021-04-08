@@ -131,7 +131,7 @@ namespace LDZ.Coinbase.Api.Json.Serialization
                     throw new JsonException();
                 }
 
-                if (reader.GetString() != FeedResponseMessageNames.Heartbeat)
+                if (reader.GetString() != FeedResponseMessageNames.Level2)
                 {
                     throw new JsonException();
                 }
@@ -143,6 +143,16 @@ namespace LDZ.Coinbase.Api.Json.Serialization
                     if (reader.TokenType == JsonTokenType.EndObject)
                     {
                         return value;
+                    }
+
+                    if (reader.TokenType == JsonTokenType.PropertyName)
+                    {
+                        var propertyName = reader.GetString();
+                        value.Products = propertyName switch
+                        {
+                            ProductArrayConverter.ProductIds => ProductArrayConverter.Deserialize(ref reader, options),
+                            _ => value.Products
+                        };
                     }
                 }
 

@@ -88,6 +88,17 @@ namespace LDZ.Coinbase.Feed.Test.Unit
         }
 
         [Fact]
+        public async Task DeserializeSubscriptionsMessageLevel2Channel()
+        {
+            var actual = JsonSerializer.Deserialize<FeedResponseMessage>(await File.ReadAllTextAsync("TestData/message_subscriptions_level2.json"), SerializerOptions);
+
+            var message = actual.ShouldBeOfType<SubscriptionsMessage>();
+            message.Channels.ShouldNotBeNull();
+            var channel = message.Channels.ShouldHaveSingleItem().ShouldBeOfType<Level2Channel>();
+            channel.Products.ShouldHaveSingleItem().ShouldBe("XTZ-EUR");
+        }
+
+        [Fact]
         public async Task DeserializeSubscriptionsMessageTickerChannel()
         {
             var actual = JsonSerializer.Deserialize<FeedResponseMessage>(await File.ReadAllTextAsync("TestData/message_subscriptions_ticker.json"), SerializerOptions);
@@ -108,6 +119,16 @@ namespace LDZ.Coinbase.Feed.Test.Unit
             message.ProductId.ShouldBe("BTC-USD");
             message.Time.ShouldBe(DateTimeOffset.Parse("2014-11-07T08:19:28.464459Z"));
             message.LastTradeId.ShouldBe(20);
+        }
+
+        [Fact]
+        public async Task DeserializeErrorMessage()
+        {
+            var actual = JsonSerializer.Deserialize<FeedResponseMessage>(await File.ReadAllTextAsync("TestData/message_error.json"), SerializerOptions);
+
+            var message = actual.ShouldBeOfType<ErrorMessage>();
+            message.Message.ShouldBe("Failed to subscribe");
+            message.Reason.ShouldBe("XTZ_EUR is not a valid product");
         }
 
         [Fact]

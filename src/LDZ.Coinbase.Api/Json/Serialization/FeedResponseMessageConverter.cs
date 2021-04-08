@@ -37,6 +37,7 @@ namespace LDZ.Coinbase.Api.Json.Serialization
             var messageType = reader.GetString();
             return messageType switch
             {
+                FeedResponseMessageNames.Error => ErrorMessageConverter.Deserialize(ref reader, options),
                 FeedResponseMessageNames.Heartbeat => HeartbeatMessageConverter.Deserialize(ref reader, options),
                 FeedResponseMessageNames.Subscriptions => SubscriptionsMessageConverter.Deserialize(ref reader, options),
                 FeedResponseMessageNames.Ticker => TickerMessageConverter.Deserialize(ref reader, options),
@@ -47,6 +48,60 @@ namespace LDZ.Coinbase.Api.Json.Serialization
         public override void Write(Utf8JsonWriter writer, FeedResponseMessage value, JsonSerializerOptions options)
         {
             throw new NotImplementedException();
+        }
+
+        private class ErrorMessageConverter : JsonConverter<ErrorMessage>
+        {
+            public static ErrorMessage? Deserialize(ref Utf8JsonReader reader, JsonSerializerOptions options)
+                => new ErrorMessageConverter().Read(ref reader, typeof(ErrorMessageConverter), options);
+
+            public override ErrorMessage? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+            {
+                if (reader.TokenType != JsonTokenType.String)
+                {
+                    throw new JsonException();
+                }
+
+                if (reader.GetString() != FeedResponseMessageNames.Error)
+                {
+                    throw new JsonException();
+                }
+
+                var value = new ErrorMessage();
+
+                while (reader.Read())
+                {
+                    if (reader.TokenType == JsonTokenType.EndObject)
+                    {
+                        return value;
+                    }
+
+                    if (reader.TokenType == JsonTokenType.PropertyName)
+                    {
+                        var propertyName = reader.GetString();
+
+                        reader.Read();
+                        switch (propertyName)
+                        {
+                            case "message":
+                                value.Message = reader.GetString();
+                                break;
+
+                            case "reason":
+                                value.Reason = reader.GetString();
+                                break;
+                        }
+                    }
+
+                }
+
+                throw new JsonException();
+            }
+
+            public override void Write(Utf8JsonWriter writer, ErrorMessage value, JsonSerializerOptions options)
+            {
+                throw new NotImplementedException();
+            }
         }
 
         private class HeartbeatMessageConverter : JsonConverter<HeartbeatMessage>
