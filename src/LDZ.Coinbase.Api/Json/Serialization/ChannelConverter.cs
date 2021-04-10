@@ -38,9 +38,9 @@ namespace LDZ.Coinbase.Api.Json.Serialization
             var messageType = reader.GetString();
             return messageType switch
             {
-                ChannelSubscriptionNames.Heartbeat => Read(ref reader, new HeartbeatChannel(), options),
-                ChannelSubscriptionNames.Ticker => Read(ref reader, new TickerChannel(), options),
-                ChannelSubscriptionNames.Level2 => Level2ChannelConverter.Deserialize(ref reader, options),
+                ChannelSubscriptionNames.Heartbeat => Deserialize<HeartbeatChannel>(ref reader, options),
+                ChannelSubscriptionNames.Level2 => Deserialize<Level2Channel>(ref reader, options),
+                ChannelSubscriptionNames.Ticker => Deserialize<TickerChannel>(ref reader, options),
                 _ => throw new JsonException()
             };
         }
@@ -72,58 +72,14 @@ namespace LDZ.Coinbase.Api.Json.Serialization
             writer.WriteEndObject();
         }
 
-        private static Channel Read(ref Utf8JsonReader reader,  HeartbeatChannel value, JsonSerializerOptions options)
+        private static TChannel? Deserialize<TChannel>(ref Utf8JsonReader reader, JsonSerializerOptions options)
+            where TChannel : ProductsChannel, new()
+            => new ProductsChannelConverter<TChannel>().Read(ref reader, typeof(TChannel), options);
+
+        private class ProductsChannelConverter<TChannel> : JsonConverter<TChannel>
+            where TChannel : ProductsChannel, new()
         {
-            while (reader.Read())
-            {
-                if (reader.TokenType == JsonTokenType.EndObject)
-                {
-                    return value;
-                }
-
-                if (reader.TokenType == JsonTokenType.PropertyName)
-                {
-                    var propertyName = reader.GetString();
-                    value.Products = propertyName switch
-                    {
-                        ProductArrayConverter.ProductIds => ProductArrayConverter.Deserialize(ref reader, options),
-                        _ => value.Products
-                    };
-                }
-            }
-
-            throw new JsonException();
-        }
-
-        private static Channel Read(ref Utf8JsonReader reader, TickerChannel value, JsonSerializerOptions options)
-        {
-            while (reader.Read())
-            {
-                if (reader.TokenType == JsonTokenType.EndObject)
-                {
-                    return value;
-                }
-
-                if (reader.TokenType == JsonTokenType.PropertyName)
-                {
-                    var propertyName = reader.GetString();
-                    value.Products = propertyName switch
-                    {
-                        ProductArrayConverter.ProductIds => ProductArrayConverter.Deserialize(ref reader, options),
-                        _ => value.Products
-                    };
-                }
-            }
-
-            throw new JsonException();
-        }
-
-        private class Level2ChannelConverter : JsonConverter<Level2Channel>
-        {
-            public static Level2Channel? Deserialize(ref Utf8JsonReader reader, JsonSerializerOptions options)
-                => new Level2ChannelConverter().Read(ref reader, typeof(Level2Channel), options);
-
-            public override Level2Channel? Read(ref Utf8JsonReader reader, Type typeToConvert,
+            public override TChannel? Read(ref Utf8JsonReader reader, Type typeToConvert,
                 JsonSerializerOptions options)
             {
                 if (reader.TokenType != JsonTokenType.String)
@@ -131,12 +87,7 @@ namespace LDZ.Coinbase.Api.Json.Serialization
                     throw new JsonException();
                 }
 
-                if (reader.GetString() != FeedResponseMessageNames.Level2)
-                {
-                    throw new JsonException();
-                }
-
-                var value = new Level2Channel();
+                var value = new TChannel();
 
                 while (reader.Read())
                 {
@@ -147,8 +98,7 @@ namespace LDZ.Coinbase.Api.Json.Serialization
 
                     if (reader.TokenType == JsonTokenType.PropertyName)
                     {
-                        var propertyName = reader.GetString();
-                        value.Products = propertyName switch
+                        value.Products = reader.GetString() switch
                         {
                             ProductArrayConverter.ProductIds => ProductArrayConverter.Deserialize(ref reader, options),
                             _ => value.Products
@@ -159,7 +109,7 @@ namespace LDZ.Coinbase.Api.Json.Serialization
                 throw new JsonException();
             }
 
-            public override void Write(Utf8JsonWriter writer, Level2Channel value, JsonSerializerOptions options)
+            public override void Write(Utf8JsonWriter writer, TChannel value, JsonSerializerOptions options)
             {
                 throw new NotImplementedException();
             }

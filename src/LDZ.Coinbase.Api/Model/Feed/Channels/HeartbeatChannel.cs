@@ -7,10 +7,8 @@ namespace LDZ.Coinbase.Api.Model.Feed.Channels
     /// To receive <see cref="HeartbeatMessage">heartbeat messages</see> for specific <see cref="Products"/> once a second subscribe
     /// to the heartbeat channel.
     /// </summary>
-    public class HeartbeatChannel : Channel
+    public class HeartbeatChannel : ProductsChannel
     {
-        public ICollection<string>? Products { get; set; }
-
         public override string ToString()
         {
             var sb = new StringBuilder("HB");

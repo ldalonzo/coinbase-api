@@ -115,8 +115,8 @@ namespace LDZ.Coinbase.Feed.Test.Unit
             var actual = JsonSerializer.Deserialize<FeedResponseMessage>(await File.ReadAllTextAsync("TestData/message_heartbeat.json"), SerializerOptions);
 
             var message = actual.ShouldBeOfType<HeartbeatMessage>();
-            message.Sequence.ShouldBe(90);
             message.ProductId.ShouldBe("BTC-USD");
+            message.Sequence.ShouldBe(90);
             message.Time.ShouldBe(DateTimeOffset.Parse("2014-11-07T08:19:28.464459Z"));
             message.LastTradeId.ShouldBe(20);
         }
@@ -137,11 +137,29 @@ namespace LDZ.Coinbase.Feed.Test.Unit
             var actual = JsonSerializer.Deserialize<FeedResponseMessage>(await File.ReadAllTextAsync("TestData/message_ticker.json"), SerializerOptions);
 
             var message = actual.ShouldBeOfType<TickerMessage>();
-            message.Sequence.ShouldBe(6469324659);
             message.ProductId.ShouldBe("ETH-EUR");
+            message.Sequence.ShouldBe(6469324659);
             message.Time.ShouldBe(DateTimeOffset.Parse("2021-04-06T20:47:44.767292Z"));
             message.TradeId.ShouldBe(17108801);
             message.Price.ShouldBe(1785.08m);
         }
+
+        [Fact]
+        public async Task DeserializeLevel2SnapshotMessage()
+        {
+            var actual = JsonSerializer.Deserialize<FeedResponseMessage>(await File.ReadAllTextAsync("TestData/message_snapshot.json"), SerializerOptions);
+
+            var message = actual.ShouldBeOfType<Level2SnapshotMessage>();
+            message.ProductId.ShouldBe("XTZ-EUR");
+
+            var bid = message.Bids.ShouldNotBeNull().ShouldHaveSingleItem();
+            bid.Price.ShouldBe(5.07925m);
+            bid.Size.ShouldBe(92.93m);
+
+            var ask = message.Asks.ShouldNotBeNull().ShouldHaveSingleItem();
+            ask.Price.ShouldBe(5.08697m);
+            ask.Size.ShouldBe(45.63m);
+        }
     }
 }
+

@@ -35,6 +35,9 @@
       <None Update="TestData\message_heartbeat.json">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
+      <None Update="TestData\message_snapshot.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
       <None Update="TestData\message_subscriptions_heartbeat.json">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>

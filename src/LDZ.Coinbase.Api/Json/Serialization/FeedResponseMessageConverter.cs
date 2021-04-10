@@ -39,6 +39,7 @@ namespace LDZ.Coinbase.Api.Json.Serialization
             {
                 FeedResponseMessageNames.Error => ErrorMessageConverter.Deserialize(ref reader, options),
                 FeedResponseMessageNames.Heartbeat => HeartbeatMessageConverter.Deserialize(ref reader, options),
+                FeedResponseMessageNames.Snapshot => Level2SnapshotMessageConverter.Deserialize(ref reader, options),
                 FeedResponseMessageNames.Subscriptions => SubscriptionsMessageConverter.Deserialize(ref reader, options),
                 FeedResponseMessageNames.Ticker => TickerMessageConverter.Deserialize(ref reader, options),
                 _ => throw new JsonException($"Message of type \"{messageType}\" is NOT supported.")
@@ -166,6 +167,62 @@ namespace LDZ.Coinbase.Api.Json.Serialization
             }
         }
 
+        private class Level2SnapshotMessageConverter : JsonConverter<Level2SnapshotMessage>
+        {
+            public static Level2SnapshotMessage? Deserialize(ref Utf8JsonReader reader, JsonSerializerOptions options)
+                => new Level2SnapshotMessageConverter().Read(ref reader, typeof(Level2SnapshotMessage), options);
+
+            public override Level2SnapshotMessage? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+            {
+                if (reader.TokenType != JsonTokenType.String)
+                {
+                    throw new JsonException();
+                }
+
+                if (reader.GetString() != FeedResponseMessageNames.Snapshot)
+                {
+                    throw new JsonException();
+                }
+
+                var value = new Level2SnapshotMessage();
+
+                while (reader.Read())
+                {
+                    if (reader.TokenType == JsonTokenType.EndObject)
+                    {
+                        return value;
+                    }
+
+                    if (reader.TokenType == JsonTokenType.PropertyName)
+                    {
+                        var propertyName = reader.GetString();
+                        switch (propertyName)
+                        {
+                            case "product_id":
+                                reader.Read();
+                                value.ProductId = reader.GetString();
+                                break;
+
+                            case "asks":
+                                value.Asks = PriceSizeArrayJsonConverter.Deserialize(ref reader, options);
+                                break;
+
+                            case "bids":
+                                value.Bids = PriceSizeArrayJsonConverter.Deserialize(ref reader, options);
+                                break;
+                        }
+                    }
+                }
+
+                throw new JsonException();
+            }
+
+            public override void Write(Utf8JsonWriter writer, Level2SnapshotMessage value, JsonSerializerOptions options)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         private class SubscriptionsMessageConverter : JsonConverter<SubscriptionsMessage>
         {
             public static SubscriptionsMessage? Deserialize(ref Utf8JsonReader reader, JsonSerializerOptions options)
@@ -267,6 +324,75 @@ namespace LDZ.Coinbase.Api.Json.Serialization
             }
 
             public override void Write(Utf8JsonWriter writer, TickerMessage value, JsonSerializerOptions options)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        private class PriceSizeArrayJsonConverter : JsonConverter<IReadOnlyList<PriceSize>>
+        {
+            public static IReadOnlyList<PriceSize>? Deserialize(ref Utf8JsonReader reader, JsonSerializerOptions options)
+                => new PriceSizeArrayJsonConverter().Read(ref reader, typeof(IReadOnlyList<PriceSize>), options);
+
+            public override IReadOnlyList<PriceSize>? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+            {
+                if (reader.TokenType != JsonTokenType.PropertyName)
+                {
+                    throw new JsonException();
+                }
+
+                reader.Read();
+                if (reader.TokenType != JsonTokenType.StartArray)
+                {
+                    throw new JsonException();
+                }
+
+                var value = new List<PriceSize>();
+
+                reader.Read();
+                while (reader.TokenType != JsonTokenType.EndArray)
+                {
+                    if (reader.TokenType != JsonTokenType.StartArray)
+                    {
+                        throw new JsonException();
+                    }
+
+                    reader.Read();
+                    if (reader.TokenType != JsonTokenType.String)
+                    {
+                        throw new JsonException();
+                    }
+                    if (!decimal.TryParse(reader.GetString(), out var price))
+                    {
+                        throw new JsonException();
+                    }
+
+                    reader.Read();
+                    if (reader.TokenType != JsonTokenType.String)
+                    {
+                        throw new JsonException();
+                    }
+
+                    if (!decimal.TryParse(reader.GetString(), out var size))
+                    {
+                        throw new JsonException();
+                    }
+
+                    reader.Read();
+                    if (reader.TokenType != JsonTokenType.EndArray)
+                    {
+                        throw new JsonException();
+                    }
+
+                    value.Add(new PriceSize{Price = price, Size = size});
+
+                    reader.Read();
+                }
+
+                return value;
+            }
+
+            public override void Write(Utf8JsonWriter writer, IReadOnlyList<PriceSize> value, JsonSerializerOptions options)
             {
                 throw new NotImplementedException();
             }
