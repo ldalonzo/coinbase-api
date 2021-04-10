@@ -14,6 +14,11 @@ namespace LDZ.Coinbase.Api.Net.Http
     {
         public MessageAuthenticationCodeHandler(IOptions<CoinbaseApiKeyOptions> options)
         {
+            if (string.IsNullOrWhiteSpace(options.Value.Secret))
+            {
+                throw new InvalidOperationException();
+            }
+
             _options = options;
 
             // First base64-decode the alphanumeric secret string (resulting in 64 bytes) before using it as the key for HMAC.

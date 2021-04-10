@@ -6,12 +6,14 @@ namespace LDZ.Coinbase.Api.Model
 {
     internal static class PaginatedResultFactory
     {
-        public static PaginatedResult<T> Create<T>(HttpHeaders headers, IEnumerable<T> value)
+        public static PaginatedResult<T>? Create<T>(HttpHeaders headers, IReadOnlyCollection<T>? value)
         {
-            var result = new PaginatedResult<T>
+            if (value == null)
             {
-                Value = value
-            };
+                return null;
+            }
+
+            var result = new PaginatedResult<T>(value);
 
             if (headers.TryParseInt(HeaderNames.After, out var after))
             {

@@ -150,7 +150,14 @@ namespace LDZ.Coinbase.Api.Json.Serialization
                         throw new JsonException();
                     }
 
-                    products.Add(reader.GetString());
+                    var product = reader.GetString();
+                    if (string.IsNullOrWhiteSpace(product))
+                    {
+                        throw new JsonException();
+                    }
+
+                    products.Add(product);
+
                     reader.Read();
                 }
 

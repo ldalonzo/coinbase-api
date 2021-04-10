@@ -317,7 +317,13 @@ namespace LDZ.Coinbase.Api.Json.Serialization
                                 reader.Read();
                                 while (reader.TokenType != JsonTokenType.EndArray)
                                 {
-                                    value.Channels.Add(JsonSerializer.Deserialize<Channel>(ref reader, options));
+                                    var channel = JsonSerializer.Deserialize<Channel>(ref reader, options);
+                                    if (channel == null)
+                                    {
+                                        throw new JsonException();
+                                    }
+
+                                    value.Channels.Add(channel);
                                     reader.Read();
                                 }
 

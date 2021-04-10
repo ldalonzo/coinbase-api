@@ -15,26 +15,26 @@ namespace LDZ.Coinbase.Api
         /// <summary>
         /// Get a list of available currency pairs for trading.
         /// </summary>
-        Task<IReadOnlyCollection<Product>> GetProductsAsync(CancellationToken cancellationToken = default);
+        Task<IReadOnlyCollection<Product>?> GetProductsAsync(CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Get market data for a specific currency pair.
         /// </summary>
-        Task<Product> GetProductAsync(string productId, CancellationToken cancellationToken = default);
+        Task<Product?> GetProductAsync(string productId, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// List the latest <see cref="Trade"/>s for a <see cref="Product"/>.
         /// </summary>
-        Task<PaginatedResult<Trade>> GetTradesAsync(string productId, int? after = null, CancellationToken cancellationToken = default);
+        Task<PaginatedResult<Trade>?> GetTradesAsync(string productId, int? after = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Get a list of open orders for a product. The amount of detail shown can be customized with the <paramref name="level"/> parameter.
         /// </summary>
-        Task<AggregatedProductOrderBook> GetProductOrderBookAsync(string productId, AggregatedProductOrderBookLevel level = AggregatedProductOrderBookLevel.LevelOne, CancellationToken cancellationToken = default);
+        Task<AggregatedProductOrderBook?> GetProductOrderBookAsync(string productId, AggregatedProductOrderBookLevel level = AggregatedProductOrderBookLevel.LevelOne, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Get the API server time.
         /// </summary>
-        Task<ApiServerTime> GetTimeAsync(CancellationToken cancellationToken = default);
+        Task<ApiServerTime?> GetTimeAsync(CancellationToken cancellationToken = default);
     }
 }

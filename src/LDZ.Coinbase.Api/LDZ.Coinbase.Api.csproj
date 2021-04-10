@@ -10,7 +10,7 @@
         <Product>.NET client for the Coinbase Pro REST API</Product>
         <Description>A .NET client for the Coinbase Pro REST API</Description>
         <Company />
-        <Nullable>annotations</Nullable>
+        <Nullable>enable</Nullable>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <Copyright>Leonardo D'Alonzo</Copyright>
         <PackageTags>coinbase gdax</PackageTags>

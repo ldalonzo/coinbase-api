@@ -8,9 +8,9 @@ namespace LDZ.Coinbase.Api
 {
     public static class MarketDataClientExtensions
     {
-        public static Task<PaginatedResult<Trade>> GetTradesAsync(this IMarketDataClient client, Product product, int? after = null, CancellationToken cancellationToken = default)
+        public static Task<PaginatedResult<Trade>?> GetTradesAsync(this IMarketDataClient client, Product product, int? after = null, CancellationToken cancellationToken = default)
         {
-            if (product == null)
+            if (product.Id == null)
             {
                 throw new ArgumentNullException(nameof(product));
             }
