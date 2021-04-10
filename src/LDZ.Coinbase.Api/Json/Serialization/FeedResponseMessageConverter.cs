@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using LDZ.Coinbase.Api.Model;
 using LDZ.Coinbase.Api.Model.Feed;
 using LDZ.Coinbase.Api.Model.Feed.Channels;
 
@@ -40,6 +41,7 @@ namespace LDZ.Coinbase.Api.Json.Serialization
                 FeedResponseMessageNames.Error => ErrorMessageConverter.Deserialize(ref reader, options),
                 FeedResponseMessageNames.Heartbeat => HeartbeatMessageConverter.Deserialize(ref reader, options),
                 FeedResponseMessageNames.Snapshot => Level2SnapshotMessageConverter.Deserialize(ref reader, options),
+                FeedResponseMessageNames.L2Update => Level2UpdateMessageConverter.Deserialize(ref reader, options),
                 FeedResponseMessageNames.Subscriptions => SubscriptionsMessageConverter.Deserialize(ref reader, options),
                 FeedResponseMessageNames.Ticker => TickerMessageConverter.Deserialize(ref reader, options),
                 _ => throw new JsonException($"Message of type \"{messageType}\" is NOT supported.")
@@ -223,6 +225,65 @@ namespace LDZ.Coinbase.Api.Json.Serialization
             }
         }
 
+        private class Level2UpdateMessageConverter : JsonConverter<Level2UpdateMessage>
+        {
+            public static Level2UpdateMessage? Deserialize(ref Utf8JsonReader reader, JsonSerializerOptions options)
+                => new Level2UpdateMessageConverter().Read(ref reader, typeof(Level2UpdateMessage), options);
+
+            public override Level2UpdateMessage? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+            {
+                if (reader.TokenType != JsonTokenType.String)
+                {
+                    throw new JsonException();
+                }
+
+                if (reader.GetString() != FeedResponseMessageNames.L2Update)
+                {
+                    throw new JsonException();
+                }
+
+                var value = new Level2UpdateMessage();
+
+                while (reader.Read())
+                {
+                    if (reader.TokenType == JsonTokenType.EndObject)
+                    {
+                        return value;
+                    }
+
+                    if (reader.TokenType == JsonTokenType.PropertyName)
+                    {
+                        var propertyName = reader.GetString();
+                        
+                        switch (propertyName)
+                        {
+                            
+                            case "product_id":
+                                reader.Read();
+                                value.ProductId = reader.GetString();
+                                break;
+
+                            case "time":
+                                reader.Read();
+                                value.Time = reader.GetDateTime();
+                                break;
+
+                            case "changes":
+                                value.Changes = PriceLevelUpdateArrayJsonConverter.Deserialize(ref reader, options);
+                                break;
+                        }
+                    }
+                }
+
+                throw new JsonException();
+            }
+
+            public override void Write(Utf8JsonWriter writer, Level2UpdateMessage value, JsonSerializerOptions options)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         private class SubscriptionsMessageConverter : JsonConverter<SubscriptionsMessage>
         {
             public static SubscriptionsMessage? Deserialize(ref Utf8JsonReader reader, JsonSerializerOptions options)
@@ -393,6 +454,78 @@ namespace LDZ.Coinbase.Api.Json.Serialization
             }
 
             public override void Write(Utf8JsonWriter writer, IReadOnlyList<PriceSize> value, JsonSerializerOptions options)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        private class PriceLevelUpdateArrayJsonConverter : JsonConverter<IReadOnlyList<PriceLevelUpdate>>
+        {
+            public static IReadOnlyList<PriceLevelUpdate>? Deserialize(ref Utf8JsonReader reader, JsonSerializerOptions options)
+                => new PriceLevelUpdateArrayJsonConverter().Read(ref reader, typeof(IReadOnlyList<PriceLevelUpdate>), options);
+
+            public override IReadOnlyList<PriceLevelUpdate>? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+            {
+                if (reader.TokenType != JsonTokenType.PropertyName)
+                {
+                    throw new JsonException();
+                }
+
+                reader.Read();
+                if (reader.TokenType != JsonTokenType.StartArray)
+                {
+                    throw new JsonException();
+                }
+
+                var value = new List<PriceLevelUpdate>();
+
+                reader.Read();
+                while (reader.TokenType != JsonTokenType.EndArray)
+                {
+                    if (reader.TokenType != JsonTokenType.StartArray)
+                    {
+                        throw new JsonException();
+                    }
+
+                    reader.Read();
+                    var side = JsonSerializer.Deserialize<OrderSide>(ref reader, options);
+
+                    reader.Read();
+                    if (reader.TokenType != JsonTokenType.String)
+                    {
+                        throw new JsonException();
+                    }
+                    if (!decimal.TryParse(reader.GetString(), out var price))
+                    {
+                        throw new JsonException();
+                    }
+
+                    reader.Read();
+                    if (reader.TokenType != JsonTokenType.String)
+                    {
+                        throw new JsonException();
+                    }
+
+                    if (!decimal.TryParse(reader.GetString(), out var size))
+                    {
+                        throw new JsonException();
+                    }
+
+                    reader.Read();
+                    if (reader.TokenType != JsonTokenType.EndArray)
+                    {
+                        throw new JsonException();
+                    }
+
+                    value.Add(new PriceLevelUpdate { Side = side, Price = price, Size = size });
+
+                    reader.Read();
+                }
+
+                return value;
+            }
+
+            public override void Write(Utf8JsonWriter writer, IReadOnlyList<PriceLevelUpdate> value, JsonSerializerOptions options)
             {
                 throw new NotImplementedException();
             }

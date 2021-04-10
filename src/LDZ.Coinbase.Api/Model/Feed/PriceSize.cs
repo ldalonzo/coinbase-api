@@ -2,8 +2,8 @@
 {
     public class PriceSize
     {
-        public decimal Price { get; init; }
+        public decimal Price { get; set; }
 
-        public decimal Size { get; init; }
+        public decimal Size { get; set; }
     }
 }

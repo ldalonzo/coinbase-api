@@ -4,6 +4,7 @@ using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
 using LDZ.Coinbase.Api.DependencyInjection;
+using LDZ.Coinbase.Api.Model;
 using LDZ.Coinbase.Api.Model.Feed;
 using LDZ.Coinbase.Api.Model.Feed.Channels;
 using Microsoft.Extensions.DependencyInjection;
@@ -159,6 +160,34 @@ namespace LDZ.Coinbase.Feed.Test.Unit
             var ask = message.Asks.ShouldNotBeNull().ShouldHaveSingleItem();
             ask.Price.ShouldBe(5.08697m);
             ask.Size.ShouldBe(45.63m);
+        }
+
+        [Fact]
+        public async Task DeserializeLevel2UpdateBuyMessage()
+        {
+            var actual = JsonSerializer.Deserialize<FeedResponseMessage>(await File.ReadAllTextAsync("TestData/message_l2update_buy.json"), SerializerOptions);
+
+            var message = actual.ShouldBeOfType<Level2UpdateMessage>();
+            message.ProductId.ShouldBe("XTZ-EUR");
+            message.Time.ShouldBe(DateTimeOffset.Parse("2021-04-10T17:09:38.150467Z"));
+            var change = message.Changes.ShouldNotBeNull().ShouldHaveSingleItem();
+            change.Side.ShouldBe(OrderSide.Buy);
+            change.Price.ShouldBe(5.61061m);
+            change.Size.ShouldBe(124.13m);
+        }
+
+        [Fact]
+        public async Task DeserializeLevel2UpdateSellyMessage()
+        {
+            var actual = JsonSerializer.Deserialize<FeedResponseMessage>(await File.ReadAllTextAsync("TestData/message_l2update_sell.json"), SerializerOptions);
+
+            var message = actual.ShouldBeOfType<Level2UpdateMessage>();
+            message.ProductId.ShouldBe("XTZ-EUR");
+            message.Time.ShouldBe(DateTimeOffset.Parse("2021-04-10T17:04:50.497329Z"));
+            var change = message.Changes.ShouldNotBeNull().ShouldHaveSingleItem();
+            change.Side.ShouldBe(OrderSide.Sell);
+            change.Price.ShouldBe(5.66044m);
+            change.Size.ShouldBe(103.56m);
         }
     }
 }

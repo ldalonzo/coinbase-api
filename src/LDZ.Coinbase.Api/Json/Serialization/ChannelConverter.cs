@@ -98,11 +98,11 @@ namespace LDZ.Coinbase.Api.Json.Serialization
 
                     if (reader.TokenType == JsonTokenType.PropertyName)
                     {
-                        value.Products = reader.GetString() switch
+                        var propertyName = reader.GetString();
+                        if (propertyName == ProductArrayConverter.ProductIds)
                         {
-                            ProductArrayConverter.ProductIds => ProductArrayConverter.Deserialize(ref reader, options),
-                            _ => value.Products
-                        };
+                            value.Products = ProductArrayConverter.Deserialize(ref reader, options);
+                        }
                     }
                 }
 
