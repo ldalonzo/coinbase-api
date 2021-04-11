@@ -32,6 +32,27 @@ var tradingClient = factory.CreateTradingClient();
 var orders = await tradingClient.ListOrdersAsync();
 ```
 
+### Websocket Feed
+```csharp
+static async Task Main(string[] args)
+{
+    var factory = CoinbaseApiFactory.Create(builder => builder.ConfigureFeed(feedBuilder =>
+    {
+        feedBuilder.SubscribeToHeartbeatChannel(OnMessageReceived, "BTC-USD");
+    }));
+
+    var dataFeed = await factory.StartMarketDataFeed();
+
+    Console.ReadKey();
+    await dataFeed.StopAsync();
+}
+
+private static void OnMessageReceived(HeartbeatMessage message)
+{
+    Console.WriteLine(message);
+}
+```
+
 ## Contributing
 
 ### Run integration tests

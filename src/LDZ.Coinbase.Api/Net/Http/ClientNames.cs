@@ -1,4 +1,4 @@
-﻿namespace LDZ.Coinbase.Api.Net
+﻿namespace LDZ.Coinbase.Api.Net.Http
 {
     internal static class ClientNames
     {

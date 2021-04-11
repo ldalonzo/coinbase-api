@@ -19,7 +19,7 @@ namespace LDZ.Coinbase.Feed.Test.Unit
         public WebsocketFeedSerializationUnitTest()
         {
             SerializerOptions = new ServiceCollection()
-                .ConfigureCoinbaseSerializerOptions()
+                .AddCoinbaseProApi()
                 .BuildServiceProvider()
                 .GetRequiredService<IOptions<JsonSerializerOptions>>().Value;
         }
@@ -191,4 +191,3 @@ namespace LDZ.Coinbase.Feed.Test.Unit
         }
     }
 }
-
