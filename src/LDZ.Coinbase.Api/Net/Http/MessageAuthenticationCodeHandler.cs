@@ -14,6 +14,11 @@ namespace LDZ.Coinbase.Api.Net.Http
     {
         public MessageAuthenticationCodeHandler(IOptions<CoinbaseApiKeyOptions> options)
         {
+            if (string.IsNullOrWhiteSpace(options.Value.Secret))
+            {
+                throw new InvalidOperationException();
+            }
+
             _options = options;
 
             // First base64-decode the alphanumeric secret string (resulting in 64 bytes) before using it as the key for HMAC.
@@ -29,12 +34,17 @@ namespace LDZ.Coinbase.Api.Net.Http
             request.Headers.Add(HeaderNames.AccessPassphrase, _options.Value.Passphrase);
 
             // The CB-ACCESS-TIMESTAMP header MUST be number of seconds since Unix Epoch in UTC. Decimal values are allowed.
-            var timeStamp = $"{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
-            request.Headers.Add(HeaderNames.AccessTimestamp, timeStamp);
+            var timeStamp = await GetTimeAsync(cancellationToken);
+            request.Headers.Add(HeaderNames.AccessTimestamp, $"{timeStamp}");
 
             request.Headers.Add(HeaderNames.AccessSign, await ComputeSignature(request, timeStamp));
 
             return await base.SendAsync(request, cancellationToken);
+        }
+
+        private Task<decimal> GetTimeAsync(CancellationToken cancellationToken)
+        {
+            return Task.FromResult<decimal>(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
         }
 
         /// <summary>
@@ -42,9 +52,9 @@ namespace LDZ.Coinbase.Api.Net.Http
         /// timestamp + method + requestPath + body (where + represents string concatenation) and base64-encode the output.
         /// The timestamp value is the same as the CB-ACCESS-TIMESTAMP header.
         /// </summary>
-        private async Task<string> ComputeSignature(HttpRequestMessage request, string timestamp)
+        private async Task<string> ComputeSignature(HttpRequestMessage request, decimal timestamp)
         {
-            var preHashBuilder = new StringBuilder(timestamp);
+            var preHashBuilder = new StringBuilder($"{timestamp}");
 
             // The method should be UPPER CASE.
             preHashBuilder.Append(request.Method.ToString().ToUpper());

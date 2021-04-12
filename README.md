@@ -32,7 +32,30 @@ var tradingClient = factory.CreateTradingClient();
 var orders = await tradingClient.ListOrdersAsync();
 ```
 
-## Run integration tests
+### Websocket Feed
+```csharp
+static async Task Main(string[] args)
+{
+    var factory = CoinbaseApiFactory.Create(builder => builder.ConfigureFeed(feedBuilder =>
+    {
+        feedBuilder.SubscribeToHeartbeatChannel(OnMessageReceived, "BTC-USD");
+    }));
+
+    var dataFeed = await factory.StartMarketDataFeed();
+
+    Console.ReadKey();
+    await dataFeed.StopAsync();
+}
+
+private static void OnMessageReceived(HeartbeatMessage message)
+{
+    Console.WriteLine(message);
+}
+```
+
+## Contributing
+
+### Run integration tests
 Integration tests target the public [Coinbase sandbox](https://docs.pro.coinbase.com/#sandbox). You'll need to create an API key and set the following environment variables:
 ```powershell
  $env:CoinbaseApiKey__Key = "API_KEY"

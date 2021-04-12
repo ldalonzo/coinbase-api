@@ -47,7 +47,8 @@ jobs:
         CoinbaseApiKey__Key: ${{ secrets.COINBASEAPIKEY__KEY }}
         CoinbaseApiKey__Passphrase: ${{ secrets.COINBASEAPIKEY__PASSPHRASE }}
         CoinbaseApiKey__Secret: ${{ secrets.COINBASEAPIKEY__SECRET }}
-      run: dotnet test --configuration $BuildConfiguration --no-build --collect:"XPlat Code Coverage" --logger:"console;verbosity=detailed"
+      run: |
+        dotnet test --configuration $BuildConfiguration --no-build --collect:"XPlat Code Coverage" --logger:"console;verbosity=detailed"
 
     - name: Pack
       run: |

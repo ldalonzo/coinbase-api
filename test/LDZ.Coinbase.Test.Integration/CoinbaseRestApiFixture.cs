@@ -14,9 +14,9 @@ namespace LDZ.Coinbase.Test.Integration
     {
         public IServiceProvider ServiceProvider => _serviceProvider;
 
-        private ServiceProvider _serviceProvider;
+        private readonly ServiceProvider _serviceProvider;
 
-        public async Task InitializeAsync()
+        public CoinbaseRestApiFixture()
         {
             var services = new ServiceCollection();
 
@@ -25,7 +25,7 @@ namespace LDZ.Coinbase.Test.Integration
                 .Build();
 
             _serviceProvider = services
-                .AddCoinbaseProRestApi(builder => builder.ConfigureApiKey(apiKey =>
+                .AddCoinbaseProApi(builder => builder.ConfigureApiKey(apiKey =>
                     {
                         apiKey.Key = configuration["CoinbaseApiKey:Key"];
                         apiKey.Passphrase = configuration["CoinbaseApiKey:Passphrase"];
@@ -33,7 +33,10 @@ namespace LDZ.Coinbase.Test.Integration
                     }),
                     api => api.UseSandbox())
                 .BuildServiceProvider();
+        }
 
+        public async Task InitializeAsync()
+        {
             await CancelAllOrders();
         }
 

@@ -7,7 +7,7 @@ namespace LDZ.Coinbase.Api.Model
     {
         [Required]
         [JsonPropertyName("product_id")]
-        public string ProductId { get; set; }
+        public string? ProductId { get; set; }
 
         [Required]
         [JsonPropertyName("side")]

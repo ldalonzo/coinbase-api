@@ -12,7 +12,7 @@ namespace LDZ.Coinbase.Test.Unit
     public static class MockHttpMessageHandlerServiceCollectionExtensions
     {
         public static T CreateClient<T>(this IServiceCollection services, MockHttpMessageHandler mockHttp) => services
-            .AddCoinbaseProRestApi()
+            .AddCoinbaseProApi()
             .AddMockHttpClient(mockHttp)
             .BuildServiceProvider()
             .GetRequiredService<T>();

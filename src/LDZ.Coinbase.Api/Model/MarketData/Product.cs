@@ -5,16 +5,16 @@ namespace LDZ.Coinbase.Api.Model.MarketData
     public class Product
     {
         [JsonPropertyName("id")]
-        public string Id { get; set; }
+        public string? Id { get; set; }
 
         [JsonPropertyName("display_name")]
-        public string DisplayName { get; set; }
+        public string? DisplayName { get; set; }
 
         [JsonPropertyName("base_currency")]
-        public string BaseCurrency { get; set; }
+        public string? BaseCurrency { get; set; }
 
         [JsonPropertyName("quote_currency")]
-        public string QuoteCurrency { get; set; }
+        public string? QuoteCurrency { get; set; }
 
         /// <summary>
         /// The minimum increment for the <see cref="BaseCurrency"/>.

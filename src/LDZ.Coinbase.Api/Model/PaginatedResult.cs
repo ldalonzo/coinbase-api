@@ -10,6 +10,11 @@ namespace LDZ.Coinbase.Api.Model
     /// </summary>
     public class PaginatedResult<T> : IEnumerable<T>
     {
+        public PaginatedResult(IReadOnlyCollection<T> value)
+        {
+            Value = value;
+        }
+
         /// <summary>
         /// The cursor id to use in your next request for the page before the current one.  The page before is a newer page and not
         /// one that happened before in chronological time.
@@ -22,7 +27,7 @@ namespace LDZ.Coinbase.Api.Model
         /// </summary>
         public int? After { get; set; }
 
-        public IEnumerable<T> Value { get; set; }
+        public IReadOnlyCollection<T> Value { get; }
 
         public IEnumerator<T> GetEnumerator()
             => Value.GetEnumerator();

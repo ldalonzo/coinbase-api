@@ -6,21 +6,19 @@ namespace LDZ.Coinbase.Test.Unit.Json.Serialization
     public abstract class CustomJsonConverterUnitTest<T, TConverter>
         where TConverter : JsonConverter<T>, new()
     {
-        protected string Serialize(T value)
+        protected CustomJsonConverterUnitTest()
         {
-            var options = new JsonSerializerOptions();
-            options.Converters.Add(new TConverter());
-
-            return JsonSerializer.Serialize(value, options);
+            Options = new JsonSerializerOptions();
+            Options.Converters.Add(new TConverter());
         }
+
+        private JsonSerializerOptions Options { get; }
+
+        protected string Serialize(T value)
+            => JsonSerializer.Serialize(value, Options);
 
         protected T Deserialize(string json)
-        {
-            var options = new JsonSerializerOptions();
-            options.Converters.Add(new TConverter());
-
-            return JsonSerializer.Deserialize<T>(json, options);
-        }
+            => JsonSerializer.Deserialize<T>(json, Options);
 
         protected T Roundtrip(T value)
             => Deserialize(Serialize(value));
