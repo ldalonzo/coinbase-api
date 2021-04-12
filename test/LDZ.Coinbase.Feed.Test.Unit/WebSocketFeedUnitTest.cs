@@ -10,19 +10,25 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Shouldly;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace LDZ.Coinbase.Feed.Test.Unit
 {
     public class WebSocketFeedUnitTest : IAsyncLifetime
     {
-        public WebSocketFeedUnitTest()
+        private readonly ITestOutputHelper _testOutputHelper;
+
+        public WebSocketFeedUnitTest(ITestOutputHelper testOutputHelper)
         {
+            _testOutputHelper = testOutputHelper;
+
             TimeoutCancellationTokenSource = new CancellationTokenSource();
+            TimeoutCancellationTokenSource.CancelAfter(TimeSpan.FromMilliseconds(1_500));
 
             TimeoutTaskCompletionSource = new TaskCompletionSource();
             TimeoutCancellationTokenSource.Token.Register(() => TimeoutTaskCompletionSource.SetResult());
 
-            Spy = new ReceivedMessageSpy();
+            Spy = new ReceivedMessageSpy(testOutputHelper);
         }
 
         private ServiceProvider? ServiceProvider { get; set; }
@@ -70,6 +76,8 @@ namespace LDZ.Coinbase.Feed.Test.Unit
             {
                 await hostedService.StartAsync(TimeoutCancellationTokenSource.Token);
             }
+
+            _testOutputHelper.WriteLine("Started");
         }
 
         private async Task StopAsync(CancellationToken cancellationToken)
@@ -84,6 +92,8 @@ namespace LDZ.Coinbase.Feed.Test.Unit
             {
                 await hostedService.StopAsync(cancellationToken);
             }
+
+            _testOutputHelper.WriteLine("Stopped");
         }
 
         private static IServiceCollection ConfigureServices(Action<IWebSocketSubscriptionsBuilder> configure)
