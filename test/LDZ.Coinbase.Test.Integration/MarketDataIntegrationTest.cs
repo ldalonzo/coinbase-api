@@ -14,13 +14,13 @@ namespace LDZ.Coinbase.Test.Integration
     {
         public MarketDataIntegrationTest(CoinbaseRestApiFixture fixture)
         {
-            _fixture = fixture;
+            ServiceScope = fixture.ServiceProvider.CreateScope();
+            MarketData = ServiceScope.ServiceProvider.GetRequiredService<IMarketDataClient>();
         }
 
-        private readonly CoinbaseRestApiFixture _fixture;
-        private IServiceScope _serviceScope;
+        private IServiceScope ServiceScope { get; }
 
-        private IMarketDataClient MarketData { get; set; }
+        private IMarketDataClient MarketData { get; }
 
         [Fact]
         public async Task GetProducts()
@@ -38,8 +38,8 @@ namespace LDZ.Coinbase.Test.Integration
         {
             var actual = await MarketData.GetProductAsync(productId);
 
-            Assert.NotNull(actual);
-            Assert.Equal(productId, actual.Id);
+            actual.ShouldNotBeNull();
+            actual.Id.ShouldBe(productId);
         }
 
         [Theory]
@@ -48,9 +48,11 @@ namespace LDZ.Coinbase.Test.Integration
         {
             var actual = await MarketData.GetTradesAsync(productId);
 
-            Assert.NotEmpty(actual);
-            Assert.True(actual.After.HasValue);
-            Assert.True(actual.Before.HasValue);
+            actual.ShouldNotBeNull();
+            actual.ShouldNotBeEmpty();
+            
+            actual.After.HasValue.ShouldBeTrue();
+            actual.Before.HasValue.ShouldBeTrue();
         }
 
         [Theory]
@@ -58,7 +60,7 @@ namespace LDZ.Coinbase.Test.Integration
         public async Task GetTradesWithAfterCursor(string productId)
         {
             var page1 = await MarketData.GetTradesAsync(productId);
-            var page2 = await MarketData.GetTradesAsync(productId, page1.After);
+            var page2 = await MarketData.GetTradesAsync(productId, page1?.After);
 
             page1.ShouldNotBeEmpty();
             page2.ShouldNotBeEmpty();
@@ -71,6 +73,7 @@ namespace LDZ.Coinbase.Test.Integration
         {
             var actual = await MarketData.GetProductOrderBookAsync(productId);
 
+            actual.ShouldNotBeNull();
             actual.Sequence.ShouldBePositive();
 
             var bestBid = actual.Bids.ShouldHaveSingleItem();
@@ -90,6 +93,7 @@ namespace LDZ.Coinbase.Test.Integration
         {
             var actual = await MarketData.GetProductOrderBookAsync(productId, AggregatedProductOrderBookLevel.LevelTwo);
 
+            actual.ShouldNotBeNull();
             actual.Sequence.ShouldBePositive();
 
             actual.Bids.ShouldNotBeEmpty();
@@ -104,21 +108,19 @@ namespace LDZ.Coinbase.Test.Integration
         {
             var actual = await MarketData.GetTimeAsync();
 
+            actual.ShouldNotBeNull();
             actual.Epoch.ShouldBePositive();
             actual.Iso.Date.ShouldBe(DateTime.Today.Date);
         }
 
         public Task InitializeAsync()
         {
-            _serviceScope = _fixture.ServiceProvider.CreateScope();
-            MarketData = _serviceScope.ServiceProvider.GetRequiredService<IMarketDataClient>();
-
             return Task.CompletedTask;
         }
 
         public Task DisposeAsync()
         {
-            _serviceScope.Dispose();
+            ServiceScope.Dispose();
 
             return Task.CompletedTask;
         }

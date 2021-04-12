@@ -14,18 +14,20 @@ namespace LDZ.Coinbase.Test.Integration
     {
         public TradingClientIntegrationTest(CoinbaseRestApiFixture fixture, ITestOutputHelper helper)
         {
-            _fixture = fixture;
             _helper = helper;
 
+            ServiceScope = fixture.ServiceProvider.CreateScope();
+
+            MarketData = ServiceScope.ServiceProvider.GetRequiredService<IMarketDataClient>();
+            TradingClient = ServiceScope.ServiceProvider.GetRequiredService<ITradingClient>();
         }
 
-        private readonly CoinbaseRestApiFixture _fixture;
         private readonly ITestOutputHelper _helper;
 
-        private IServiceScope _serviceScope;
+        private IServiceScope ServiceScope { get; }
 
-        private IMarketDataClient MarketData { get; set; }
-        private ITradingClient TradingClient { get; set; }
+        private IMarketDataClient MarketData { get; }
+        private ITradingClient TradingClient { get; }
 
         [Theory]
         [InlineData("BTC-USD")]
@@ -38,8 +40,8 @@ namespace LDZ.Coinbase.Test.Integration
             {
                 ProductId = productId,
                 Side = OrderSide.Buy,
-                Size = product.BaseMinSize,
-                Price = productOrderBook.GetWorstBid()
+                Size = product?.BaseMinSize,
+                Price = productOrderBook?.GetWorstBid()
             });
             newOrder.ShouldNotBeNull();
             _helper.WriteLine($"Placed order {newOrder}");
@@ -50,16 +52,12 @@ namespace LDZ.Coinbase.Test.Integration
 
         public Task InitializeAsync()
         {
-            _serviceScope = _fixture.ServiceProvider.CreateScope();
-
-            MarketData = _serviceScope.ServiceProvider.GetRequiredService<IMarketDataClient>();
-            TradingClient = _serviceScope.ServiceProvider.GetRequiredService<ITradingClient>();
             return Task.CompletedTask;
         }
 
         public Task DisposeAsync()
         {
-            _serviceScope.Dispose();
+            ServiceScope.Dispose();
             return Task.CompletedTask;
         }
     }
