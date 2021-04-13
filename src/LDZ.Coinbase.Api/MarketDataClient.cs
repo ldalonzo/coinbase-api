@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using System.Web;
 using LDZ.Coinbase.Api.Model;
 using LDZ.Coinbase.Api.Model.MarketData;
-using LDZ.Coinbase.Api.Net;
 using LDZ.Coinbase.Api.Net.Http;
 using Microsoft.Extensions.Options;
 
@@ -38,11 +37,6 @@ namespace LDZ.Coinbase.Api
 
         public async Task<Product?> GetProductAsync(string productId, CancellationToken cancellationToken = default)
         {
-            if (productId == null)
-            {
-                throw new ArgumentNullException(nameof(productId));
-            }
-
             using var client = _factory.CreateClient(ClientNames.MarketData);
 
             var response = await client.GetAsync(new Uri($"/products/{productId}", UriKind.Relative), cancellationToken);
@@ -53,11 +47,6 @@ namespace LDZ.Coinbase.Api
 
         public async Task<PaginatedResult<Trade>?> GetTradesAsync(string productId, int? after = null, CancellationToken cancellationToken = default)
         {
-            if (productId == null)
-            {
-                throw new ArgumentNullException(nameof(productId));
-            }
-
             using var client = _factory.CreateClient(ClientNames.MarketData);
 
             var requestUriBuilder = new StringBuilder($"/products/{productId}/trades");
@@ -82,11 +71,6 @@ namespace LDZ.Coinbase.Api
 
         public async Task<AggregatedProductOrderBook?> GetProductOrderBookAsync(string productId, AggregatedProductOrderBookLevel level = AggregatedProductOrderBookLevel.LevelOne, CancellationToken cancellationToken = default)
         {
-            if (productId == null)
-            {
-                throw new ArgumentNullException(nameof(productId));
-            }
-
             using var client = _factory.CreateClient(ClientNames.MarketData);
 
             var requestUriBuilder = new StringBuilder($"/products/{productId}/book");

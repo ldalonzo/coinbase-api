@@ -6,12 +6,20 @@ using Xunit;
 
 namespace LDZ.Coinbase.Test.Unit.Json.Serialization
 {
-    public class DecimalConverterUnitTest : CustomJsonConverterUnitTest<decimal, DecimalConverter>
+    public class DecimalConverterUnitTest
     {
+        public DecimalConverterUnitTest()
+        {
+            Options = new JsonSerializerOptions();
+            Options.Converters.Add(new DecimalConverter());
+        }
+
+        private JsonSerializerOptions Options { get; }
+
         [Theory]
         [AutoData]
         public void DeserializeSucceeds(decimal expected)
-            => Deserialize($"\"{expected}\"").ShouldBe(expected);
+            => JsonSerializer.Deserialize<decimal>($"\"{expected}\"", Options).ShouldBe(expected);
 
         [Theory]
         [InlineData("")]
@@ -20,11 +28,11 @@ namespace LDZ.Coinbase.Test.Unit.Json.Serialization
         [InlineData("\"blah\"")]
         [InlineData("\"blah")]
         public void DeserializeFails(string json)
-            => Should.Throw<JsonException>(() => Deserialize(json));
+            => Should.Throw<JsonException>(() => JsonSerializer.Deserialize<decimal>(json, Options));
 
         [Theory]
         [AutoData]
         public void RoundtripSucceeds(decimal expected)
-            => Roundtrip(expected).ShouldBe(expected);
+            => JsonSerializer.Deserialize<decimal>(JsonSerializer.Serialize(expected, Options), Options).ShouldBe(expected);
     }
 }

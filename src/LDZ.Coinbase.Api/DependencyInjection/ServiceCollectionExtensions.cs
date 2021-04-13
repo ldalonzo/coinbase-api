@@ -18,11 +18,6 @@ namespace LDZ.Coinbase.Api.DependencyInjection
     {
         public static IServiceCollection AddCoinbaseProApi(this IServiceCollection services, Action<ICoinbaseApiBuilder>? configure = null, Action<OptionsBuilder<CoinbaseApiOptions>>? configureOptions = null)
         {
-            if (services == null)
-            {
-                throw new ArgumentNullException(nameof(services));
-            }
-
             var builder = services.AddCoinbaseProApi(configureOptions ?? (b => b.UseProduction()));
             configure?.Invoke(builder);
 
@@ -31,11 +26,6 @@ namespace LDZ.Coinbase.Api.DependencyInjection
 
         public static ICoinbaseApiBuilder AddCoinbaseProApi(this IServiceCollection services, Action<OptionsBuilder<CoinbaseApiOptions>> configureOptions)
         {
-            if (services == null)
-            {
-                throw new ArgumentNullException(nameof(services));
-            }
-
             services
                 .ConfigureCoinbaseSerializerOptions();
 
