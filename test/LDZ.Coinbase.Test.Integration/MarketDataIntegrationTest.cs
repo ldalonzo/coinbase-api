@@ -3,29 +3,19 @@ using System.Linq;
 using System.Threading.Tasks;
 using LDZ.Coinbase.Api;
 using LDZ.Coinbase.Api.Model.MarketData;
-using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace LDZ.Coinbase.Test.Integration
 {
     [Collection(nameof(CoinbaseRestApiCollection))]
-    public class MarketDataIntegrationTest : IAsyncLifetime
+    public class MarketDataIntegrationTest
     {
-        public MarketDataIntegrationTest(CoinbaseRestApiFixture fixture, ITestOutputHelper testOutput)
+        public MarketDataIntegrationTest(CoinbaseRestApiFixture fixture)
         {
-            _fixture = fixture;
-            _testOutput = testOutput;
-
-            ServiceScope = fixture.ServiceProvider.CreateScope();
-            MarketData = ServiceScope.ServiceProvider.GetRequiredService<IMarketDataClient>();
+            MarketData = fixture.ApiFactory.CreateMarketDataClient();
         }
 
-        private readonly CoinbaseRestApiFixture _fixture;
-        private readonly ITestOutputHelper _testOutput;
-
-        private IServiceScope ServiceScope { get; }
         private IMarketDataClient MarketData { get; }
 
         [Fact]
@@ -117,21 +107,6 @@ namespace LDZ.Coinbase.Test.Integration
             actual.ShouldNotBeNull();
             actual.Epoch.ShouldBePositive();
             actual.Iso.Date.ShouldBe(DateTime.Today.Date);
-        }
-
-        public Task InitializeAsync()
-        {
-            _testOutput.WriteLine($"Started.");
-
-            return Task.CompletedTask;
-        }
-
-        public Task DisposeAsync()
-        {
-            ServiceScope.Dispose();
-
-            _testOutput.WriteLine("Disposed.");
-            return Task.CompletedTask;
         }
     }
 }

@@ -11,6 +11,7 @@ namespace LDZ.Coinbase.Api.Hosting
         private readonly Dictionary<Type, Action<FeedResponseMessage>> _handlersByMessageType = new Dictionary<Type, Action<FeedResponseMessage>>();
 
         private HeartbeatChannel? _heartbeatChannel;
+        private TickerChannel? _tickerChannel;
 
         public void SubscribeToHeartbeatChannel(Action<HeartbeatMessage> onReceived, params string[] productIds)
         {
@@ -25,6 +26,24 @@ namespace LDZ.Coinbase.Api.Hosting
             foreach (var productId in productIds)
             {
                 _heartbeatChannel.Products.Add(productId);
+            }
+
+            AddMessageHandler(onReceived);
+        }
+
+        public void SubscribeToTickerChannel(Action<TickerMessage> onReceived, params string[] productIds)
+        {
+            if (!productIds.Any())
+            {
+                return;
+            }
+
+            _tickerChannel ??= new TickerChannel();
+            _tickerChannel.Products ??= new List<string>();
+
+            foreach (var productId in productIds)
+            {
+                _tickerChannel.Products.Add(productId);
             }
 
             AddMessageHandler(onReceived);
@@ -46,6 +65,11 @@ namespace LDZ.Coinbase.Api.Hosting
             if (_heartbeatChannel != null)
             {
                 yield return _heartbeatChannel;
+            }
+
+            if (_tickerChannel != null)
+            {
+                yield return _tickerChannel;
             }
         }
     }

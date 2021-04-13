@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using LDZ.Coinbase.Api;
+using LDZ.Coinbase.Api.Hosting;
 using LDZ.Coinbase.Api.Model.Feed;
 using LDZ.Coinbase.Api.Options;
 using LDZ.Coinbase.Test.Shared;
@@ -27,8 +28,32 @@ namespace LDZ.Coinbase.Test.Integration
         {
             var spy = new ReceivedMessageSpy(_testOutput);
 
-            var factory = CoinbaseApiFactory.Create(
-                builder => builder.ConfigureFeed(r => r.SubscribeToHeartbeatChannel(spy.ReceiveMessage, productId)),
+            await RecordMessages(r => r.SubscribeToHeartbeatChannel(spy.ReceiveMessage, productId));
+
+            spy.ReceivedMessages.ShouldNotBeEmpty();
+            var actualMessages = spy.ReceivedMessages.OfType<HeartbeatMessage>().ToList();
+            actualMessages.ShouldNotBeEmpty();
+            actualMessages.ShouldContain(m => m.ProductId == productId);
+        }
+
+        [Theory]
+        [InlineData("BTC-USD")]
+        public async Task SubscribeToTickerChannel(string productId)
+        {
+            var spy = new ReceivedMessageSpy(_testOutput);
+
+            await RecordMessages(r => r.SubscribeToTickerChannel(spy.ReceiveMessage, productId));
+
+            spy.ReceivedMessages.ShouldNotBeEmpty();
+            var actualMessages = spy.ReceivedMessages.OfType<TickerMessage>().ToList();
+            actualMessages.ShouldNotBeEmpty();
+            actualMessages.ShouldContain(m => m.ProductId == productId);
+        }
+
+        private async Task RecordMessages(Action<IWebSocketSubscriptionsBuilder> configureFeed)
+        {
+            using var factory = CoinbaseApiFactory.Create(
+                builder => builder.ConfigureFeed(configureFeed),
                 options => options.UseSandbox());
 
             var feed = await factory.StartMarketDataFeed(CancellationToken.None);
@@ -39,11 +64,6 @@ namespace LDZ.Coinbase.Test.Integration
 
             await feed.StopAsync(CancellationToken.None);
             _testOutput.WriteLine("Stopped recording.");
-
-            spy.ReceivedMessages.ShouldNotBeEmpty();
-            var actualMessages = spy.ReceivedMessages.OfType<HeartbeatMessage>().ToList();
-            actualMessages.ShouldNotBeEmpty();
-            actualMessages.ShouldContain(m => m.ProductId == productId);
         }
 
         public Task InitializeAsync()

@@ -2,7 +2,6 @@ using System.Threading.Tasks;
 using LDZ.Coinbase.Api;
 using LDZ.Coinbase.Api.Model;
 using LDZ.Coinbase.Api.Model.MarketData;
-using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
@@ -10,23 +9,18 @@ using Xunit.Abstractions;
 namespace LDZ.Coinbase.Test.Integration
 {
     [Collection(nameof(CoinbaseRestApiCollection))]
-    public class TradingClientIntegrationTest : IAsyncLifetime
+    public class TradingClientIntegrationTest
     {
         public TradingClientIntegrationTest(CoinbaseRestApiFixture fixture, ITestOutputHelper testOutput)
         {
-            _fixture = fixture;
             _testOutput = testOutput;
 
-            ServiceScope = fixture.ServiceProvider.CreateScope();
-
-            MarketData = ServiceScope.ServiceProvider.GetRequiredService<IMarketDataClient>();
-            TradingClient = ServiceScope.ServiceProvider.GetRequiredService<ITradingClient>();
+            MarketData = fixture.ApiFactory.CreateMarketDataClient();
+            TradingClient = fixture.ApiFactory.CreateTradingClient();
         }
 
-        private readonly CoinbaseRestApiFixture _fixture;
         private readonly ITestOutputHelper _testOutput;
 
-        private IServiceScope ServiceScope { get; }
         private IMarketDataClient MarketData { get; }
         private ITradingClient TradingClient { get; }
 
@@ -42,28 +36,13 @@ namespace LDZ.Coinbase.Test.Integration
                 ProductId = productId,
                 Side = OrderSide.Buy,
                 Size = product?.BaseMinSize,
-                Price = productOrderBook?.GetWorstBid()
+                Price = productOrderBook?.GetWorstBid() - product?.QuoteIncrement
             });
             newOrder.ShouldNotBeNull();
             _testOutput.WriteLine($"Placed order {newOrder}");
 
             var cancelledOrderId = await TradingClient.CancelOrder(newOrder.Id, productId);
             cancelledOrderId.ShouldBe(newOrder.Id);
-        }
-
-        public Task InitializeAsync()
-        {
-            _testOutput.WriteLine($"Started.");
-
-            return Task.CompletedTask;
-        }
-
-        public Task DisposeAsync()
-        {
-            _testOutput.WriteLine("Disposed.");
-
-            ServiceScope.Dispose();
-            return Task.CompletedTask;
         }
     }
 }
