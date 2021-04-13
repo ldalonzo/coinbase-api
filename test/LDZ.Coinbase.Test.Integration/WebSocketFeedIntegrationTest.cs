@@ -50,6 +50,25 @@ namespace LDZ.Coinbase.Test.Integration
             actualMessages.ShouldContain(m => m.ProductId == productId);
         }
 
+        [Theory]
+        [InlineData("BTC-USD")]
+        public async Task SubscribeToLevel2Channel(string productId)
+        {
+            var spy = new ReceivedMessageSpy(_testOutput);
+
+            await RecordMessages(r => r.SubscribeToLevel2Channel(spy.ReceiveMessage, spy.ReceiveMessage, productId));
+
+            spy.ReceivedMessages.ShouldNotBeEmpty();
+
+            var snapshotMessage = spy.ReceivedMessages.OfType<Level2SnapshotMessage>().ShouldHaveSingleItem();
+            snapshotMessage.ShouldNotBeNull();
+            snapshotMessage.ProductId.ShouldBe(productId);
+
+            var updateMessages = spy.ReceivedMessages.OfType<Level2UpdateMessage>().ToList();
+            updateMessages.ShouldNotBeEmpty();
+            updateMessages.ShouldContain(m => m.ProductId == productId);
+        }
+
         private async Task RecordMessages(Action<IWebSocketSubscriptionsBuilder> configureFeed)
         {
             using var factory = CoinbaseApiFactory.Create(

@@ -16,5 +16,10 @@ namespace LDZ.Coinbase.Api.Hosting
         /// greatly reducing bandwidth requirements.
         /// </summary>
         void SubscribeToTickerChannel(Action<TickerMessage> onReceived, params string[] productIds);
+
+        /// <summary>
+        /// The easiest way to keep a snapshot of the order book is to use the level2 channel. It guarantees delivery of all updates.
+        /// </summary>
+        void SubscribeToLevel2Channel(Action<Level2SnapshotMessage> onSnapshotReceived, Action<Level2UpdateMessage> onUpdateReceived, params string[] productIds);
     }
 }

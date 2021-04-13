@@ -12,6 +12,7 @@ namespace LDZ.Coinbase.Api.Hosting
 
         private HeartbeatChannel? _heartbeatChannel;
         private TickerChannel? _tickerChannel;
+        private Level2Channel? _level2Channel;
 
         public void SubscribeToHeartbeatChannel(Action<HeartbeatMessage> onReceived, params string[] productIds)
         {
@@ -49,6 +50,20 @@ namespace LDZ.Coinbase.Api.Hosting
             AddMessageHandler(onReceived);
         }
 
+        public void SubscribeToLevel2Channel(Action<Level2SnapshotMessage> onSnapshotReceived, Action<Level2UpdateMessage> onUpdateReceived, params string[] productIds)
+        {
+            _level2Channel ??= new Level2Channel();
+            _level2Channel.Products ??= new List<string>();
+
+            foreach (var productId in productIds)
+            {
+                _level2Channel.Products.Add(productId);
+            }
+
+            AddMessageHandler(onSnapshotReceived);
+            AddMessageHandler(onUpdateReceived);
+        }
+
         private void AddMessageHandler<TMessage>(Action<TMessage> onReceived) where TMessage : FeedResponseMessage
             =>_handlersByMessageType.Add(typeof(TMessage), r => onReceived((TMessage)r));
 
@@ -65,6 +80,11 @@ namespace LDZ.Coinbase.Api.Hosting
             if (_heartbeatChannel != null)
             {
                 yield return _heartbeatChannel;
+            }
+
+            if (_level2Channel != null)
+            {
+                yield return _level2Channel;
             }
 
             if (_tickerChannel != null)
