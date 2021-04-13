@@ -31,7 +31,7 @@ namespace LDZ.Coinbase.Test.Unit
             string? clientName = null;
             clientFactoryMock
                 .Setup(factory => factory.CreateClient(It.IsAny<string>()))
-                .Callback<string>(c => { clientName = c; })
+                .Callback<string>(c => clientName = c)
                 .Returns(() =>
                 {
                     var optionsMonitor = provider.GetRequiredService<IOptionsMonitor<HttpClientFactoryOptions>>();

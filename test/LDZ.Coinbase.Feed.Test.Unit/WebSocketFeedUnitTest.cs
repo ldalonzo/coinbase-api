@@ -1,109 +1,101 @@
 using System;
-using System.Collections.Generic;
+using System.Linq;
+using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
+using LDZ.Coinbase.Api;
 using LDZ.Coinbase.Api.DependencyInjection;
 using LDZ.Coinbase.Api.Hosting;
 using LDZ.Coinbase.Api.Model.Feed;
+using LDZ.Coinbase.Api.Net;
 using LDZ.Coinbase.Api.Net.WebSockets;
 using LDZ.Coinbase.Test.Shared;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using Moq;
 using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace LDZ.Coinbase.Feed.Test.Unit
 {
-    public class WebSocketFeedUnitTest : IAsyncLifetime
+    public class WebSocketFeedUnitTest
     {
-        private readonly ITestOutputHelper _testOutputHelper;
+        private readonly ITestOutputHelper _outputHelper;
 
-        public WebSocketFeedUnitTest(ITestOutputHelper testOutputHelper)
+        public WebSocketFeedUnitTest(ITestOutputHelper outputHelper)
         {
-            _testOutputHelper = testOutputHelper;
-
-            TimeoutCancellationTokenSource = new CancellationTokenSource();
-            TimeoutCancellationTokenSource.CancelAfter(TimeSpan.FromMilliseconds(1_500));
-
-            TimeoutTaskCompletionSource = new TaskCompletionSource();
-            TimeoutCancellationTokenSource.Token.Register(() => TimeoutTaskCompletionSource.SetResult());
-
-            Spy = new ReceivedMessageSpy(testOutputHelper);
+            _outputHelper = outputHelper;
         }
-
-        private ServiceProvider? ServiceProvider { get; set; }
-        private CancellationTokenSource TimeoutCancellationTokenSource { get; }
-        private TaskCompletionSource TimeoutTaskCompletionSource { get; }
-        private Task TimeoutTask => TimeoutTaskCompletionSource.Task;
-
-        private ReceivedMessageSpy Spy { get; }
 
         [Fact]
         public async Task SubscribeToHeartbeatChannel()
         {
-            ServiceProvider = ConfigureServices(builder => builder.SubscribeToHeartbeatChannel(Spy.ReceiveMessage, "ETH-EUR")).BuildServiceProvider();
-            ServiceProvider
-                .GetRequiredService<ClientWebSocketMock>()
-                .SetupReceiveMessage("TestData/message_heartbeat.json");
+            var spy = new ReceivedMessageSpy(_outputHelper);
 
-            await StartAsync();
-            await TimeoutTask;
+            var webSocketMock = new Mock<IClientWebSocketFacade>();
+            webSocketMock.SetupReceiveAsyncSequence()
+                .Returns("TestData/message_BTC-USD_heartbeat.json");
 
-            Spy.ReceivedMessages.ShouldHaveSingleItem().ShouldBeOfType<HeartbeatMessage>();
+            await RecordMessages(apiBuilder => apiBuilder
+                .ConfigureFeed(builder => builder.SubscribeToHeartbeatChannel(spy.ReceiveMessage, "BTC-USD")), webSocketMock.Object);
+
+            webSocketMock.Verify(socket => socket.ConnectAsync(It.Is<Uri>(u => u == EndpointUriNames.WebsocketFeedUri), It.IsAny<CancellationToken>()), Times.Exactly(1));
+            webSocketMock.Verify(socket => socket.SendAsync(It.Is<ReadOnlyMemory<byte>>(buffer => buffer.ShouldContainUft8String("\"heartbeat\",\"product_ids\":[\"BTC-USD\"]") ), It.Is<WebSocketMessageType>(t => t == WebSocketMessageType.Text), It.Is<bool>(b => b), It.IsAny<CancellationToken>()), Times.Exactly(1));
+
+            spy.ReceivedMessages.OfType<HeartbeatMessage>().ShouldNotBeEmpty();
         }
 
-        public Task InitializeAsync()
+        [Fact]
+        public async Task SubscribeToTickerChannel()
         {
-            TimeoutCancellationTokenSource.CancelAfter(TimeSpan.FromMilliseconds(600));
+            var spy = new ReceivedMessageSpy(_outputHelper);
+            var webSocketMock = new Mock<IClientWebSocketFacade>();
+            webSocketMock.SetupReceiveAsyncSequence()
+                .Returns("TestData/message_ETH-EUR_ticker.json");
 
-            return Task.CompletedTask;
+            await RecordMessages(apiBuilder => apiBuilder
+                .ConfigureFeed(builder => builder.SubscribeToTickerChannel(spy.ReceiveMessage, "ETH-EUR")), webSocketMock.Object);
+
+            webSocketMock.Verify(socket => socket.ConnectAsync(It.Is<Uri>(u => u == EndpointUriNames.WebsocketFeedUri), It.IsAny<CancellationToken>()), Times.Exactly(1));
+            webSocketMock.Verify(socket => socket.SendAsync(It.Is<ReadOnlyMemory<byte>>(buffer => buffer.ShouldContainUft8String("\"ticker\",\"product_ids\":[\"ETH-EUR\"]")), It.Is<WebSocketMessageType>(t => t == WebSocketMessageType.Text), It.Is<bool>(j => j), It.IsAny<CancellationToken>()), Times.Exactly(1));
+            spy.ReceivedMessages.OfType<TickerMessage>().ShouldHaveSingleItem();
         }
 
-        public async Task DisposeAsync()
+        [Fact]
+        public async Task SubscribeToLevel2Channel()
         {
-            await StopAsync(new CancellationTokenSource(TimeSpan.FromSeconds(1)).Token);
+            var spy = new ReceivedMessageSpy(_outputHelper);
+            var webSocketMock = new Mock<IClientWebSocketFacade>();
+            webSocketMock
+                .SetupReceiveAsyncSequence()
+                .Returns("TestData/message_XTZ-EUR_snapshot.json")
+                .Returns("TestData/message_XTZ-EUR_l2update_buy.json")
+                .Returns("TestData/message_XTZ-EUR_l2update_sell.json");
+
+            await RecordMessages(apiBuilder => apiBuilder
+                .ConfigureFeed(builder => builder.SubscribeToLevel2Channel(spy.ReceiveMessage, spy.ReceiveMessage, "XTZ-EUR")), webSocketMock.Object);
+
+            webSocketMock.Verify(socket => socket.ConnectAsync(It.Is<Uri>(u => u == EndpointUriNames.WebsocketFeedUri), It.IsAny<CancellationToken>()), Times.Exactly(1));
+            webSocketMock.Verify(socket => socket.SendAsync(It.Is<ReadOnlyMemory<byte>>(buffer => buffer.ShouldContainUft8String("\"level2\",\"product_ids\":[\"XTZ-EUR\"]")), It.Is<WebSocketMessageType>(t => t == WebSocketMessageType.Text), It.Is<bool>(j => j), It.IsAny<CancellationToken>()), Times.Exactly(1));
+            spy.ReceivedMessages.OfType<Level2SnapshotMessage>().ShouldHaveSingleItem();
+            spy.ReceivedMessages.OfType<Level2UpdateMessage>().ShouldNotBeEmpty();
         }
 
-        private async Task StartAsync()
+        private static async Task RecordMessages(Action<ICoinbaseApiBuilder>? configure, IClientWebSocketFacade webSocket)
         {
-            if (ServiceProvider == null)
-            {
-                return;
-            }
+            var services = new ServiceCollection();
 
-            var hostedServices = ServiceProvider.GetRequiredService<IEnumerable<IHostedService>>();
-            foreach (var hostedService in hostedServices)
-            {
-                await hostedService.StartAsync(TimeoutCancellationTokenSource.Token);
-            }
+            await using var serviceProvider = services
+                .AddLogging()
+                .AddTransient(_ => webSocket)
+                .AddCoinbaseProApi(configure)
+                .BuildServiceProvider();
 
-            _testOutputHelper.WriteLine("Started");
+            var feed = serviceProvider.GetRequiredService<IMarketDataFeedMessagePublisher>();
+
+            await feed.StartAsync().ConfigureAwait(false);
+            await Task.Delay(500);
+            await feed.StopAsync().ConfigureAwait(false);
         }
-
-        private async Task StopAsync(CancellationToken cancellationToken)
-        {
-            if (ServiceProvider == null)
-            {
-                return;
-            }
-
-            var hostedServices = ServiceProvider.GetRequiredService<IEnumerable<IHostedService>>();
-            foreach (var hostedService in hostedServices)
-            {
-                await hostedService.StopAsync(cancellationToken);
-            }
-
-            _testOutputHelper.WriteLine("Stopped");
-        }
-
-        private static IServiceCollection ConfigureServices(Action<IWebSocketSubscriptionsBuilder> configure)
-            => ConfigureServices(new ServiceCollection(), configure);
-
-        private static IServiceCollection ConfigureServices(IServiceCollection services, Action<IWebSocketSubscriptionsBuilder> configure) => services
-            .AddLogging()
-            .AddSingleton<ClientWebSocketMock>()
-            .AddTransient<IClientWebSocketFacade>(sp => sp.GetRequiredService<ClientWebSocketMock>())
-            .AddCoinbaseProApi(apiBuilder => apiBuilder.ConfigureFeed(configure));
     }
 }

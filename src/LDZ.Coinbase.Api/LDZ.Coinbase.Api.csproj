@@ -7,8 +7,7 @@
         <RepositoryType>git</RepositoryType>
         <RepositoryUrl>https://github.com/ldalonzo/coinbase-api</RepositoryUrl>
         <Authors>Leonardo D'Alonzo</Authors>
-        <Product>.NET client for the Coinbase Pro REST API</Product>
-        <Description>A .NET client for the Coinbase Pro REST API</Description>
+        <Description>A .NET client for the Coinbase Pro REST API and Websocket Feed</Description>
         <Company />
         <Nullable>enable</Nullable>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>

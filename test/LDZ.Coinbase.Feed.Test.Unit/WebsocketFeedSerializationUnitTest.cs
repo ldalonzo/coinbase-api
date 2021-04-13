@@ -113,7 +113,7 @@ namespace LDZ.Coinbase.Feed.Test.Unit
         [Fact]
         public async Task DeserializeHeartbeatMessage()
         {
-            var actual = JsonSerializer.Deserialize<FeedResponseMessage>(await File.ReadAllTextAsync("TestData/message_heartbeat.json"), SerializerOptions);
+            var actual = JsonSerializer.Deserialize<FeedResponseMessage>(await File.ReadAllTextAsync("TestData/message_BTC-USD_heartbeat.json"), SerializerOptions);
 
             var message = actual.ShouldBeOfType<HeartbeatMessage>();
             message.ProductId.ShouldBe("BTC-USD");
@@ -135,7 +135,7 @@ namespace LDZ.Coinbase.Feed.Test.Unit
         [Fact]
         public async Task DeserializeTickerMessage()
         {
-            var actual = JsonSerializer.Deserialize<FeedResponseMessage>(await File.ReadAllTextAsync("TestData/message_ticker.json"), SerializerOptions);
+            var actual = JsonSerializer.Deserialize<FeedResponseMessage>(await File.ReadAllTextAsync("TestData/message_ETH-EUR_ticker.json"), SerializerOptions);
 
             var message = actual.ShouldBeOfType<TickerMessage>();
             message.ProductId.ShouldBe("ETH-EUR");
@@ -148,7 +148,7 @@ namespace LDZ.Coinbase.Feed.Test.Unit
         [Fact]
         public async Task DeserializeLevel2SnapshotMessage()
         {
-            var actual = JsonSerializer.Deserialize<FeedResponseMessage>(await File.ReadAllTextAsync("TestData/message_snapshot.json"), SerializerOptions);
+            var actual = JsonSerializer.Deserialize<FeedResponseMessage>(await File.ReadAllTextAsync("TestData/message_XTZ-EUR_snapshot.json"), SerializerOptions);
 
             var message = actual.ShouldBeOfType<Level2SnapshotMessage>();
             message.ProductId.ShouldBe("XTZ-EUR");
@@ -165,7 +165,7 @@ namespace LDZ.Coinbase.Feed.Test.Unit
         [Fact]
         public async Task DeserializeLevel2UpdateBuyMessage()
         {
-            var actual = JsonSerializer.Deserialize<FeedResponseMessage>(await File.ReadAllTextAsync("TestData/message_l2update_buy.json"), SerializerOptions);
+            var actual = JsonSerializer.Deserialize<FeedResponseMessage>(await File.ReadAllTextAsync("TestData/message_XTZ-EUR_l2update_buy.json"), SerializerOptions);
 
             var message = actual.ShouldBeOfType<Level2UpdateMessage>();
             message.ProductId.ShouldBe("XTZ-EUR");
@@ -179,7 +179,7 @@ namespace LDZ.Coinbase.Feed.Test.Unit
         [Fact]
         public async Task DeserializeLevel2UpdateSellyMessage()
         {
-            var actual = JsonSerializer.Deserialize<FeedResponseMessage>(await File.ReadAllTextAsync("TestData/message_l2update_sell.json"), SerializerOptions);
+            var actual = JsonSerializer.Deserialize<FeedResponseMessage>(await File.ReadAllTextAsync("TestData/message_XTZ-EUR_l2update_sell.json"), SerializerOptions);
 
             var message = actual.ShouldBeOfType<Level2UpdateMessage>();
             message.ProductId.ShouldBe("XTZ-EUR");

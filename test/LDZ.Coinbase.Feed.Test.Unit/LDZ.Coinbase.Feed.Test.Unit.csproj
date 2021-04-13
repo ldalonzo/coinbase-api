@@ -28,16 +28,16 @@
         <None Update="TestData\message_error.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-        <None Update="TestData\message_heartbeat.json">
+        <None Update="TestData\message_BTC-USD_heartbeat.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-        <None Update="TestData\message_l2update_buy.json">
+        <None Update="TestData\message_XTZ-EUR_l2update_buy.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-        <None Update="TestData\message_l2update_sell.json">
+        <None Update="TestData\message_XTZ-EUR_l2update_sell.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-        <None Update="TestData\message_snapshot.json">
+        <None Update="TestData\message_XTZ-EUR_snapshot.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
         <None Update="TestData\message_subscriptions_heartbeat.json">
@@ -49,7 +49,7 @@
         <None Update="TestData\message_subscriptions_ticker.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-        <None Update="TestData\message_ticker.json">
+        <None Update="TestData\message_ETH-EUR_ticker.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
         <None Update="TestData\subscribe_heartbeat.json">
