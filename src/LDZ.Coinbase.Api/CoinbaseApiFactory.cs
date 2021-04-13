@@ -9,26 +9,24 @@ using Microsoft.Extensions.Options;
 
 namespace LDZ.Coinbase.Api
 {
-    public class CoinbaseApiFactory
+    public class CoinbaseApiFactory : IDisposable
     {
         public static CoinbaseApiFactory Create(Action<ICoinbaseApiBuilder>? configure = null, Action<OptionsBuilder<CoinbaseApiOptions>>? configureOptions = null)
         {
             var services = new ServiceCollection();
 
-            var builder = services
-                .AddCoinbaseProApi(configureOptions ?? (b => b.UseProduction()));
-
-            configure?.Invoke(builder);
-
-            return new CoinbaseApiFactory(services.BuildServiceProvider());
+            return new CoinbaseApiFactory(services
+                .AddCoinbaseProApi(configure, configureOptions ?? (b => b.UseProduction()))
+                .BuildServiceProvider()
+            );
         }
 
-        private CoinbaseApiFactory(IServiceProvider serviceProvider)
+        private CoinbaseApiFactory(ServiceProvider serviceProvider)
         {
             ServiceProvider = serviceProvider;
         }
 
-        private IServiceProvider ServiceProvider { get; }
+        private ServiceProvider ServiceProvider { get; }
 
         public IMarketDataClient CreateMarketDataClient()
             => ServiceProvider.CreateScope().ServiceProvider.GetRequiredService<IMarketDataClient>();
@@ -42,6 +40,11 @@ namespace LDZ.Coinbase.Api
             await marketDataFeed.StartAsync(cancellationToken);
 
             return marketDataFeed;
+        }
+
+        public void Dispose()
+        {
+            ServiceProvider.Dispose();
         }
     }
 }

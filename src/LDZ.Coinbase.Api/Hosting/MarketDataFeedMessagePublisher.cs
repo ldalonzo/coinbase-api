@@ -9,8 +9,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using LDZ.Coinbase.Api.Model.Feed;
 using LDZ.Coinbase.Api.Model.Feed.Channels;
-using LDZ.Coinbase.Api.Net;
 using LDZ.Coinbase.Api.Net.WebSockets;
+using LDZ.Coinbase.Api.Options;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -21,19 +21,23 @@ namespace LDZ.Coinbase.Api.Hosting
     {
         public MarketDataFeedMessagePublisher(
             ILogger<MarketDataFeedMessagePublisher> log,
+            IOptions<CoinbaseApiOptions> apiOptions,
             IOptions<JsonSerializerOptions> serializerOptions,
-            IOptions<MarketDataFeedMessagePublisherOptions> options,
+            IOptions<MarketDataFeedMessagePublisherOptions> subscriptionOptions,
             IClientWebSocketFacade webSocket)
         {
             _log = log;
+            _apiOptions = apiOptions.Value;
             _serializerOptions = serializerOptions.Value;
-            _options = options;
+            _subscriptionOptions = subscriptionOptions.Value;
             _webSocket = webSocket;
         }
 
         private readonly ILogger _log;
+
+        private readonly CoinbaseApiOptions _apiOptions;
         private readonly JsonSerializerOptions _serializerOptions;
-        private readonly IOptions<MarketDataFeedMessagePublisherOptions> _options;
+        private readonly MarketDataFeedMessagePublisherOptions _subscriptionOptions;
         private readonly IClientWebSocketFacade _webSocket;
 
         private readonly BlockingCollection<FeedResponseMessage> _messagesQueue = new BlockingCollection<FeedResponseMessage>(new ConcurrentQueue<FeedResponseMessage>(), 1024);
@@ -52,11 +56,11 @@ namespace LDZ.Coinbase.Api.Hosting
                 return;
             }
 
-            if (_options.Value.Subscriptions != null && _options.Value.Subscriptions.Any())
+            if (_subscriptionOptions.Subscriptions != null && _subscriptionOptions.Subscriptions.Any())
             {
-                _handlersByMessageType = _options.Value.Handlers;
+                _handlersByMessageType = _subscriptionOptions.Handlers;
 
-                await SubscribeAsync(_options.Value.Subscriptions, cancellationToken);
+                await SubscribeAsync(_subscriptionOptions.Subscriptions, cancellationToken);
 
                 _cancellationTokenSource = new CancellationTokenSource();
 
@@ -66,12 +70,12 @@ namespace LDZ.Coinbase.Api.Hosting
             }
 
             _started = true;
-            _log.LogInformation("Started");
+            _log.LogInformation("Started.");
         }
 
         public async Task StopAsync(CancellationToken cancellationToken = default)
         {
-            _log.LogInformation("Stopping");
+            _log.LogInformation("Stopping.");
 
             _cancellationTokenSource?.Cancel();
 
@@ -87,13 +91,18 @@ namespace LDZ.Coinbase.Api.Hosting
                 }
             }
 
-            _log.LogInformation("Stopped");
+            _log.LogInformation("Stopped.");
         }
 
         private async Task SubscribeAsync(IEnumerable<Channel> channels, CancellationToken cancellationToken)
         {
-            await _webSocket.ConnectAsync(EndpointUriNames.WebsocketFeedUri, cancellationToken);
-            _log.LogInformation($"connected to {EndpointUriNames.WebsocketFeedUri}");
+            if (_apiOptions.WebsocketFeedUri == null)
+            {
+                throw new InvalidOperationException();
+            }
+
+            await _webSocket.ConnectAsync(_apiOptions.WebsocketFeedUri, cancellationToken);
+            _log.LogInformation($"connected to {_apiOptions.WebsocketFeedUri}");
 
             // To begin receiving feed messages, you must first send a subscribe message to the server indicating which channels and products
             // to receive. This message is mandatory - you will be disconnected if no subscribe has been received within 5 seconds.

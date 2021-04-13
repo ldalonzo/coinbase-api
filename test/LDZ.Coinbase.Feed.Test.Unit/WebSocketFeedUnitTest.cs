@@ -6,6 +6,7 @@ using LDZ.Coinbase.Api.DependencyInjection;
 using LDZ.Coinbase.Api.Hosting;
 using LDZ.Coinbase.Api.Model.Feed;
 using LDZ.Coinbase.Api.Net.WebSockets;
+using LDZ.Coinbase.Test.Shared;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Shouldly;
@@ -103,6 +104,6 @@ namespace LDZ.Coinbase.Feed.Test.Unit
             .AddLogging()
             .AddSingleton<ClientWebSocketMock>()
             .AddTransient<IClientWebSocketFacade>(sp => sp.GetRequiredService<ClientWebSocketMock>())
-            .AddCoinbaseProApi(a => a.ConfigureFeed(configure));
+            .AddCoinbaseProApi(apiBuilder => apiBuilder.ConfigureFeed(configure));
     }
 }

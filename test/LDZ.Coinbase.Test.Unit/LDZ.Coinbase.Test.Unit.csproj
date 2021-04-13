@@ -2,18 +2,15 @@
 
     <PropertyGroup>
         <TargetFramework>net5.0</TargetFramework>
-
         <IsPackable>false</IsPackable>
-
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="AutoFixture.Xunit2" Version="4.15.0" />
+        <PackageReference Include="AutoFixture.Xunit2" Version="4.16.0" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
         <PackageReference Include="Moq" Version="4.16.1" />
         <PackageReference Include="RichardSzalay.MockHttp" Version="6.0.0" />
-        <PackageReference Include="Shouldly" Version="4.0.3" />
         <PackageReference Include="xunit" Version="2.4.1" />
         <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -26,7 +23,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\src\LDZ.Coinbase.Api\LDZ.Coinbase.Api.csproj" />
+        <ProjectReference Include="..\LDZ.Coinbase.Test.Shared\LDZ.Coinbase.Test.Shared.csproj" />
     </ItemGroup>
 
     <ItemGroup>

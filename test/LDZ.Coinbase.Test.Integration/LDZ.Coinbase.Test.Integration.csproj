@@ -2,9 +2,7 @@
 
     <PropertyGroup>
         <TargetFramework>net5.0</TargetFramework>
-
         <IsPackable>false</IsPackable>
-
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
@@ -23,11 +21,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Shouldly" Version="4.0.3" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <ProjectReference Include="..\..\src\LDZ.Coinbase.Api\LDZ.Coinbase.Api.csproj" />
+        <ProjectReference Include="..\LDZ.Coinbase.Test.Shared\LDZ.Coinbase.Test.Shared.csproj" />
     </ItemGroup>
 
 </Project>

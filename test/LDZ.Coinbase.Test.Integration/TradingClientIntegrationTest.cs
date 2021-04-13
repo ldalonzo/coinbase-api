@@ -12,9 +12,10 @@ namespace LDZ.Coinbase.Test.Integration
     [Collection(nameof(CoinbaseRestApiCollection))]
     public class TradingClientIntegrationTest : IAsyncLifetime
     {
-        public TradingClientIntegrationTest(CoinbaseRestApiFixture fixture, ITestOutputHelper helper)
+        public TradingClientIntegrationTest(CoinbaseRestApiFixture fixture, ITestOutputHelper testOutput)
         {
-            _helper = helper;
+            _fixture = fixture;
+            _testOutput = testOutput;
 
             ServiceScope = fixture.ServiceProvider.CreateScope();
 
@@ -22,10 +23,10 @@ namespace LDZ.Coinbase.Test.Integration
             TradingClient = ServiceScope.ServiceProvider.GetRequiredService<ITradingClient>();
         }
 
-        private readonly ITestOutputHelper _helper;
+        private readonly CoinbaseRestApiFixture _fixture;
+        private readonly ITestOutputHelper _testOutput;
 
         private IServiceScope ServiceScope { get; }
-
         private IMarketDataClient MarketData { get; }
         private ITradingClient TradingClient { get; }
 
@@ -44,7 +45,7 @@ namespace LDZ.Coinbase.Test.Integration
                 Price = productOrderBook?.GetWorstBid()
             });
             newOrder.ShouldNotBeNull();
-            _helper.WriteLine($"Placed order {newOrder}");
+            _testOutput.WriteLine($"Placed order {newOrder}");
 
             var cancelledOrderId = await TradingClient.CancelOrder(newOrder.Id, productId);
             cancelledOrderId.ShouldBe(newOrder.Id);
@@ -52,11 +53,15 @@ namespace LDZ.Coinbase.Test.Integration
 
         public Task InitializeAsync()
         {
+            _testOutput.WriteLine($"Started.");
+
             return Task.CompletedTask;
         }
 
         public Task DisposeAsync()
         {
+            _testOutput.WriteLine("Disposed.");
+
             ServiceScope.Dispose();
             return Task.CompletedTask;
         }

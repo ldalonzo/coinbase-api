@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using System.Web;
 using LDZ.Coinbase.Api.Model;
 using LDZ.Coinbase.Api.Model.MarketData;
-using LDZ.Coinbase.Api.Net;
 using LDZ.Coinbase.Api.Net.Http;
 using Microsoft.Extensions.Options;
 

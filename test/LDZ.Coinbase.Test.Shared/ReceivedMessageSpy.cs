@@ -1,9 +1,8 @@
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using LDZ.Coinbase.Api.Model.Feed;
 using Xunit.Abstractions;
 
-namespace LDZ.Coinbase.Feed.Test.Unit
+namespace LDZ.Coinbase.Test.Shared
 {
     public class ReceivedMessageSpy
     {

@@ -6,20 +6,26 @@ using LDZ.Coinbase.Api.Model.MarketData;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace LDZ.Coinbase.Test.Integration
 {
     [Collection(nameof(CoinbaseRestApiCollection))]
     public class MarketDataIntegrationTest : IAsyncLifetime
     {
-        public MarketDataIntegrationTest(CoinbaseRestApiFixture fixture)
+        public MarketDataIntegrationTest(CoinbaseRestApiFixture fixture, ITestOutputHelper testOutput)
         {
+            _fixture = fixture;
+            _testOutput = testOutput;
+
             ServiceScope = fixture.ServiceProvider.CreateScope();
             MarketData = ServiceScope.ServiceProvider.GetRequiredService<IMarketDataClient>();
         }
 
-        private IServiceScope ServiceScope { get; }
+        private readonly CoinbaseRestApiFixture _fixture;
+        private readonly ITestOutputHelper _testOutput;
 
+        private IServiceScope ServiceScope { get; }
         private IMarketDataClient MarketData { get; }
 
         [Fact]
@@ -115,6 +121,8 @@ namespace LDZ.Coinbase.Test.Integration
 
         public Task InitializeAsync()
         {
+            _testOutput.WriteLine($"Started.");
+
             return Task.CompletedTask;
         }
 
@@ -122,6 +130,7 @@ namespace LDZ.Coinbase.Test.Integration
         {
             ServiceScope.Dispose();
 
+            _testOutput.WriteLine("Disposed.");
             return Task.CompletedTask;
         }
     }
