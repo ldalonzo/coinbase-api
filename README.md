@@ -1,4 +1,4 @@
-[![CI](https://github.com/ldalonzo/coinbase-api/actions/workflows/ci.yml/badge.svg)](https://github.com/ldalonzo/coinbase-api/actions/workflows/ci.yml) [![nuget](https://img.shields.io/nuget/vpre/LDZ.Coinbase.Api)](https://www.nuget.org/packages/LDZ.Coinbase.Api)
+[![CI](https://github.com/ldalonzo/coinbase-api/actions/workflows/ci.yml/badge.svg)](https://github.com/ldalonzo/coinbase-api/actions/workflows/ci.yml) [![nuget](https://img.shields.io/nuget/vpre/LDZ.Coinbase.Api)](https://www.nuget.org/packages/LDZ.Coinbase.Api) [![codecov](https://codecov.io/gh/ldalonzo/coinbase-api/branch/develop/graph/badge.svg?token=8CPL3UFFJZ)](https://codecov.io/gh/ldalonzo/coinbase-api)
 
 # Coinbase Pro API
 A .NET client for the [Coinbase Pro REST API](https://docs.pro.coinbase.com/#api).

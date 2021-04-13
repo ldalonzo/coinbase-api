@@ -50,6 +50,11 @@ jobs:
       run: |
         dotnet test --configuration $BuildConfiguration --no-build --collect:"XPlat Code Coverage" --logger:"console;verbosity=detailed"
 
+    - name: Report test coverage reports to Codecov
+      shell: bash
+      run: |
+        bash <(curl -s https://codecov.io/bash)
+
     - name: Pack
       run: |
         dotnet pack --configuration $BuildConfiguration --no-restore -p:Version=${{ env.version }} -p:AssemblyVersion=${{ env.assembly_version }}
