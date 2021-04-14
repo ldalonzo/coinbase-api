@@ -21,19 +21,5 @@ namespace LDZ.Coinbase.Api.Hosting
 
             return this;
         }
-
-        public ICoinbaseApiBuilder ConfigureFeed(Action<IWebSocketSubscriptionsBuilder> configureFeed)
-        {
-            var builder = new WebSocketSubscriptionsBuilder();
-            configureFeed(builder);
-
-            Services.AddOptions<MarketDataFeedMessagePublisherOptions>().PostConfigure(options =>
-            {
-                options.Handlers = builder.BuildHandlers();
-                options.Subscriptions = builder.BuildSubscriptions();
-            });
-
-            return this;
-        }
     }
 }

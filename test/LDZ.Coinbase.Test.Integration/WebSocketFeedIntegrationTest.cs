@@ -1,9 +1,7 @@
 using System;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using LDZ.Coinbase.Api;
-using LDZ.Coinbase.Api.Hosting;
 using LDZ.Coinbase.Api.Model.Feed;
 using LDZ.Coinbase.Api.Options;
 using LDZ.Coinbase.Test.Shared;
@@ -18,17 +16,23 @@ namespace LDZ.Coinbase.Test.Integration
         public WebSocketFeedIntegrationTest(ITestOutputHelper testOutput)
         {
             _testOutput = testOutput;
+
+            _factory = CoinbaseApiFactory.Create(configureOptions: options => options.UseSandbox());
+            _webSocketFeed = _factory.CreateWebSocketFeed();
         }
 
         private readonly ITestOutputHelper _testOutput;
+
+        private readonly CoinbaseApiFactory _factory;
+        private readonly IMarketDataFeedMessagePublisher _webSocketFeed;
 
         [Theory]
         [InlineData("BTC-USD")]
         public async Task SubscribeToHeartbeatChannel(string productId)
         {
-            var spy = new ReceivedMessageSpy(_testOutput);
-
-            await RecordMessages(r => r.SubscribeToHeartbeatChannel(spy.ReceiveMessage, productId));
+            var spy = await _webSocketFeed
+                .SubscribeToHeartbeatChannel(productId)
+                .RecordMessagesAsync(_webSocketFeed, _testOutput, TimeSpan.FromSeconds(3));
 
             spy.ReceivedMessages.ShouldNotBeEmpty();
             var actualMessages = spy.ReceivedMessages.OfType<HeartbeatMessage>().ToList();
@@ -40,9 +44,9 @@ namespace LDZ.Coinbase.Test.Integration
         [InlineData("BTC-USD")]
         public async Task SubscribeToTickerChannel(string productId)
         {
-            var spy = new ReceivedMessageSpy(_testOutput);
-
-            await RecordMessages(r => r.SubscribeToTickerChannel(spy.ReceiveMessage, productId));
+            var spy = await _webSocketFeed
+                .SubscribeToTickerChannel(productId)
+                .RecordMessagesAsync(_webSocketFeed, _testOutput, TimeSpan.FromSeconds(3));
 
             spy.ReceivedMessages.ShouldNotBeEmpty();
             var actualMessages = spy.ReceivedMessages.OfType<TickerMessage>().ToList();
@@ -54,9 +58,9 @@ namespace LDZ.Coinbase.Test.Integration
         [InlineData("BTC-USD")]
         public async Task SubscribeToLevel2Channel(string productId)
         {
-            var spy = new ReceivedMessageSpy(_testOutput);
-
-            await RecordMessages(r => r.SubscribeToLevel2Channel(spy.ReceiveMessage, spy.ReceiveMessage, productId));
+            var spy = await _webSocketFeed
+                .SubscribeToLevel2Channel(productId)
+                .RecordMessagesAsync(_webSocketFeed, _testOutput, TimeSpan.FromSeconds(3));
 
             spy.ReceivedMessages.ShouldNotBeEmpty();
 
@@ -69,22 +73,6 @@ namespace LDZ.Coinbase.Test.Integration
             updateMessages.ShouldContain(m => m.ProductId == productId);
         }
 
-        private async Task RecordMessages(Action<IWebSocketSubscriptionsBuilder> configureFeed)
-        {
-            using var factory = CoinbaseApiFactory.Create(
-                builder => builder.ConfigureFeed(configureFeed),
-                options => options.UseSandbox());
-
-            var feed = await factory.StartMarketDataFeed(CancellationToken.None);
-            _testOutput.WriteLine("Started recording.");
-
-            // Wait for some messages to come through.
-            await Task.Delay(TimeSpan.FromSeconds(3));
-
-            await feed.StopAsync(CancellationToken.None);
-            _testOutput.WriteLine("Stopped recording.");
-        }
-
         public Task InitializeAsync()
         {
             return Task.CompletedTask;
@@ -92,6 +80,8 @@ namespace LDZ.Coinbase.Test.Integration
 
         public Task DisposeAsync()
         {
+            _factory.Dispose();
+
             _testOutput.WriteLine("Disposed.");
             return Task.CompletedTask;
         }

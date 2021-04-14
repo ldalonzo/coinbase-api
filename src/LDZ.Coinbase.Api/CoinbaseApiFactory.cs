@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
 using LDZ.Coinbase.Api.DependencyInjection;
 using LDZ.Coinbase.Api.Hosting;
 using LDZ.Coinbase.Api.Options;
@@ -34,13 +32,8 @@ namespace LDZ.Coinbase.Api
         public ITradingClient CreateTradingClient()
             => ServiceProvider.CreateScope().ServiceProvider.GetRequiredService<ITradingClient>();
 
-        public async Task<IMarketDataFeedMessagePublisher> StartMarketDataFeed(CancellationToken cancellationToken = default)
-        {
-            var marketDataFeed = ServiceProvider.CreateScope().ServiceProvider.GetRequiredService<IMarketDataFeedMessagePublisher>();
-            await marketDataFeed.StartAsync(cancellationToken);
-
-            return marketDataFeed;
-        }
+        public IMarketDataFeedMessagePublisher CreateWebSocketFeed()
+            => ServiceProvider.CreateScope().ServiceProvider.GetRequiredService<IMarketDataFeedMessagePublisher>();
 
         public void Dispose()
         {

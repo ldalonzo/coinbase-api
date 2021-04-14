@@ -5,10 +5,8 @@ using System.Text;
 namespace LDZ.Coinbase.Api.Model.Feed
 {
     /// <seealso cref="Level2SnapshotMessage"/>
-    public class Level2UpdateMessage : FeedResponseMessage
+    public class Level2UpdateMessage : Level2Message
     {
-        public string? ProductId { get; set; }
-
         /// <summary>
         /// The time of the event as recorded by the trading engine.
         /// </summary>

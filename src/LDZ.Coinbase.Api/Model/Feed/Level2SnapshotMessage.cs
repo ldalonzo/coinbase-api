@@ -9,10 +9,8 @@ namespace LDZ.Coinbase.Api.Model.Feed
     /// <see cref="Bids"/> and <see cref="Asks"/> are arrays of <see cref="PriceSize"/> tuples and represent the entire order book.
     /// </summary>
     /// <seealso cref="Level2UpdateMessage"/>
-    public class Level2SnapshotMessage : FeedResponseMessage
+    public class Level2SnapshotMessage : Level2Message
     {
-        public string? ProductId { get; set; }
-
         public IReadOnlyList<PriceSize>? Bids { get; set; }
 
         public IReadOnlyList<PriceSize>? Asks { get; set; }

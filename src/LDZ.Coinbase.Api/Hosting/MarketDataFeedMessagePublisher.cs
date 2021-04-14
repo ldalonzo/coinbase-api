@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -11,25 +12,22 @@ using LDZ.Coinbase.Api.Model.Feed;
 using LDZ.Coinbase.Api.Model.Feed.Channels;
 using LDZ.Coinbase.Api.Net.WebSockets;
 using LDZ.Coinbase.Api.Options;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace LDZ.Coinbase.Api.Hosting
 {
-    internal class MarketDataFeedMessagePublisher : IMarketDataFeedMessagePublisher, IHostedService
+    internal class MarketDataFeedMessagePublisher : IMarketDataFeedMessagePublisher
     {
         public MarketDataFeedMessagePublisher(
             ILogger<MarketDataFeedMessagePublisher> log,
             IOptions<CoinbaseApiOptions> apiOptions,
             IOptions<JsonSerializerOptions> serializerOptions,
-            IOptions<MarketDataFeedMessagePublisherOptions> subscriptionOptions,
             IClientWebSocketFacade webSocket)
         {
             _log = log;
             _apiOptions = apiOptions.Value;
             _serializerOptions = serializerOptions.Value;
-            _subscriptionOptions = subscriptionOptions.Value;
             _webSocket = webSocket;
 
             var channel = Channel.CreateUnbounded<FeedResponseMessage>();
@@ -41,40 +39,45 @@ namespace LDZ.Coinbase.Api.Hosting
 
         private readonly CoinbaseApiOptions _apiOptions;
         private readonly JsonSerializerOptions _serializerOptions;
-        private readonly MarketDataFeedMessagePublisherOptions _subscriptionOptions;
         private readonly IClientWebSocketFacade _webSocket;
+
+        private readonly WebSocketSubscriptionsBuilder _subscriptionsBuilder = new WebSocketSubscriptionsBuilder();
 
         private readonly ChannelReader<FeedResponseMessage> _reader;
         private readonly ChannelWriter<FeedResponseMessage> _writer;
 
-        private IReadOnlyDictionary<Type, Action<FeedResponseMessage>>? _handlersByMessageType;
+        private IReadOnlyDictionary<Type, Func<FeedResponseMessage, CancellationToken, ValueTask>>? _handlersByMessageType;
 
         private CancellationTokenSource? _cancellationTokenSource;
         private Task? _producerConsumerTask;
 
-        private bool _started;
+        public ChannelReader<HeartbeatMessage> SubscribeToHeartbeatChannel(params string[] productIds)
+        {
+            return _subscriptionsBuilder.SubscribeToHeartbeatChannel(productIds);
+        }
+
+        public ChannelReader<TickerMessage> SubscribeToTickerChannel(params string[] productIds)
+        {
+            return _subscriptionsBuilder.SubscribeToTickerChannel(productIds);
+        }
+
+        public ChannelReader<Level2Message> SubscribeToLevel2Channel(params string[] productIds)
+        {
+            return _subscriptionsBuilder.SubscribeToLevel2Channel(productIds);
+        }
 
         public async Task StartAsync(CancellationToken cancellationToken = default)
         {
-            if (_started)
-            {
-                return;
-            }
+            _handlersByMessageType = _subscriptionsBuilder.BuildHandlers();
 
-            if (_subscriptionOptions.Subscriptions != null && _subscriptionOptions.Subscriptions.Any())
-            {
-                _handlersByMessageType = _subscriptionOptions.Handlers;
+            await SubscribeAsync(_subscriptionsBuilder.BuildSubscriptions(), cancellationToken);
 
-                await SubscribeAsync(_subscriptionOptions.Subscriptions, cancellationToken);
+            _cancellationTokenSource = new CancellationTokenSource();
 
-                _cancellationTokenSource = new CancellationTokenSource();
+            _producerConsumerTask = Task.WhenAll(
+                ReceiveMessagesAsync(_cancellationTokenSource.Token),
+                ConsumeMessagesAsync(_cancellationTokenSource.Token));
 
-                _producerConsumerTask = Task.WhenAll(
-                    ReceiveMessagesAsync(_cancellationTokenSource.Token),
-                    ConsumeMessagesAsync(_cancellationTokenSource.Token));
-            }
-
-            _started = true;
             _log.LogInformation("Started.");
         }
 
@@ -111,9 +114,14 @@ namespace LDZ.Coinbase.Api.Hosting
 
             // To begin receiving feed messages, you must first send a subscribe message to the server indicating which channels and products
             // to receive. This message is mandatory - you will be disconnected if no subscribe has been received within 5 seconds.
+            await SendSubscribeMessage(channels.ToArray());
+        }
+
+        private async Task SendSubscribeMessage(params FeedChannel[] channels)
+        {
             var message = SubscribeMessage.Create(channels);
             var bytes = JsonSerializer.SerializeToUtf8Bytes<FeedRequestMessage>(message, _serializerOptions);
-            await _webSocket.SendAsync(bytes, WebSocketMessageType.Text, true, cancellationToken);
+            await _webSocket.SendAsync(bytes, WebSocketMessageType.Text, true, CancellationToken.None);
         }
 
         private async Task ConsumeMessagesAsync(CancellationToken cancellationToken)
@@ -132,7 +140,7 @@ namespace LDZ.Coinbase.Api.Hosting
 
                 try
                 {
-                    handle(trade);
+                    await handle(trade, cancellationToken);
                 }
                 catch (Exception ex)
                 {

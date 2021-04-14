@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using LDZ.Coinbase.Api;
 using LDZ.Coinbase.Api.DependencyInjection;
-using LDZ.Coinbase.Api.Hosting;
 using LDZ.Coinbase.Api.Model.Feed;
 using LDZ.Coinbase.Api.Net;
 using LDZ.Coinbase.Api.Net.WebSockets;
@@ -20,24 +19,25 @@ namespace LDZ.Coinbase.Feed.Test.Unit
 {
     public class WebSocketFeedUnitTest
     {
-        private readonly ITestOutputHelper _outputHelper;
-
-        public WebSocketFeedUnitTest(ITestOutputHelper outputHelper)
+        public WebSocketFeedUnitTest(ITestOutputHelper testOutput)
         {
-            _outputHelper = outputHelper;
+            _testOutput = testOutput;
         }
+
+        private readonly ITestOutputHelper _testOutput;
 
         [Fact]
         public async Task SubscribeToHeartbeatChannel()
         {
-            var spy = new ReceivedMessageSpy(_outputHelper);
-
             var webSocketMock = new Mock<IClientWebSocketFacade>();
             webSocketMock.SetupReceiveAsyncSequence()
                 .Returns("TestData/message_BTC-USD_heartbeat.json");
 
-            await RecordMessages(apiBuilder => apiBuilder
-                .ConfigureFeed(builder => builder.SubscribeToHeartbeatChannel(spy.ReceiveMessage, "BTC-USD")), webSocketMock.Object);
+            var webSocketFeed = CreateWebSocketFeed(webSocketMock);
+
+            var spy = await webSocketFeed
+                .SubscribeToHeartbeatChannel("BTC-USD")
+                .RecordMessagesAsync(webSocketFeed, _testOutput, TimeSpan.FromMilliseconds(100));
 
             webSocketMock.Verify(socket => socket.ConnectAsync(It.Is<Uri>(u => u == EndpointUriNames.WebsocketFeedUri), It.IsAny<CancellationToken>()), Times.Exactly(1));
             webSocketMock.Verify(socket => socket.SendAsync(It.Is<ReadOnlyMemory<byte>>(buffer => buffer.ContainsUtf8String("\"heartbeat\",\"product_ids\":[\"BTC-USD\"]") ), It.Is<WebSocketMessageType>(t => t == WebSocketMessageType.Text), It.Is<bool>(b => b), It.IsAny<CancellationToken>()), Times.Exactly(1));
@@ -48,13 +48,14 @@ namespace LDZ.Coinbase.Feed.Test.Unit
         [Fact]
         public async Task SubscribeToTickerChannel()
         {
-            var spy = new ReceivedMessageSpy(_outputHelper);
             var webSocketMock = new Mock<IClientWebSocketFacade>();
             webSocketMock.SetupReceiveAsyncSequence()
                 .Returns("TestData/message_ETH-EUR_ticker.json");
 
-            await RecordMessages(apiBuilder => apiBuilder
-                .ConfigureFeed(builder => builder.SubscribeToTickerChannel(spy.ReceiveMessage, "ETH-EUR")), webSocketMock.Object);
+            var webSocketFeed = CreateWebSocketFeed(webSocketMock);
+            var spy = await webSocketFeed
+                .SubscribeToTickerChannel("ETH-EUR")
+                .RecordMessagesAsync(webSocketFeed, _testOutput, TimeSpan.FromMilliseconds(100));
 
             webSocketMock.Verify(socket => socket.ConnectAsync(It.Is<Uri>(u => u == EndpointUriNames.WebsocketFeedUri), It.IsAny<CancellationToken>()), Times.Exactly(1));
             webSocketMock.Verify(socket => socket.SendAsync(It.Is<ReadOnlyMemory<byte>>(buffer => buffer.ContainsUtf8String("\"ticker\",\"product_ids\":[\"ETH-EUR\"]")), It.Is<WebSocketMessageType>(t => t == WebSocketMessageType.Text), It.Is<bool>(j => j), It.IsAny<CancellationToken>()), Times.Exactly(1));
@@ -64,7 +65,6 @@ namespace LDZ.Coinbase.Feed.Test.Unit
         [Fact]
         public async Task SubscribeToLevel2Channel()
         {
-            var spy = new ReceivedMessageSpy(_outputHelper);
             var webSocketMock = new Mock<IClientWebSocketFacade>();
             webSocketMock
                 .SetupReceiveAsyncSequence()
@@ -72,8 +72,11 @@ namespace LDZ.Coinbase.Feed.Test.Unit
                 .Returns("TestData/message_XTZ-EUR_l2update_buy.json")
                 .Returns("TestData/message_XTZ-EUR_l2update_sell.json");
 
-            await RecordMessages(apiBuilder => apiBuilder
-                .ConfigureFeed(builder => builder.SubscribeToLevel2Channel(spy.ReceiveMessage, spy.ReceiveMessage, "XTZ-EUR")), webSocketMock.Object);
+            var webSocketFeed = CreateWebSocketFeed(webSocketMock);
+
+            var spy = await webSocketFeed
+                .SubscribeToLevel2Channel("XTZ-EUR")
+                .RecordMessagesAsync(webSocketFeed, _testOutput, TimeSpan.FromMilliseconds(100));
 
             webSocketMock.Verify(socket => socket.ConnectAsync(It.Is<Uri>(u => u == EndpointUriNames.WebsocketFeedUri), It.IsAny<CancellationToken>()), Times.Exactly(1));
             webSocketMock.Verify(socket => socket.SendAsync(It.Is<ReadOnlyMemory<byte>>(buffer => buffer.ContainsUtf8String("\"level2\",\"product_ids\":[\"XTZ-EUR\"]")), It.Is<WebSocketMessageType>(t => t == WebSocketMessageType.Text), It.Is<bool>(j => j), It.IsAny<CancellationToken>()), Times.Exactly(1));
@@ -81,21 +84,17 @@ namespace LDZ.Coinbase.Feed.Test.Unit
             spy.ReceivedMessages.OfType<Level2UpdateMessage>().ShouldNotBeEmpty();
         }
 
-        private static async Task RecordMessages(Action<ICoinbaseApiBuilder>? configure, IClientWebSocketFacade webSocket)
+        private static IMarketDataFeedMessagePublisher CreateWebSocketFeed(Mock<IClientWebSocketFacade> webSocketMock)
         {
             var services = new ServiceCollection();
 
-            await using var serviceProvider = services
+            var serviceProvider = services
                 .AddLogging()
-                .AddTransient(_ => webSocket)
-                .AddCoinbaseProApi(configure)
+                .AddTransient(_ => webSocketMock.Object)
+                .AddCoinbaseProApi()
                 .BuildServiceProvider();
 
-            var feed = serviceProvider.GetRequiredService<IMarketDataFeedMessagePublisher>();
-
-            await feed.StartAsync().ConfigureAwait(false);
-            await Task.Delay(500);
-            await feed.StopAsync().ConfigureAwait(false);
+            return serviceProvider.GetRequiredService<IMarketDataFeedMessagePublisher>();
         }
     }
 }

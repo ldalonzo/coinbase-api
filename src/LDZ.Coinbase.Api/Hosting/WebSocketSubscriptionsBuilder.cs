@@ -1,73 +1,80 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Channels;
+using System.Threading.Tasks;
 using LDZ.Coinbase.Api.Model.Feed;
 using LDZ.Coinbase.Api.Model.Feed.Channels;
 
 namespace LDZ.Coinbase.Api.Hosting
 {
-    internal class WebSocketSubscriptionsBuilder : IWebSocketSubscriptionsBuilder
+    internal class WebSocketSubscriptionsBuilder
     {
-        private readonly Dictionary<Type, Action<FeedResponseMessage>> _handlersByMessageType = new Dictionary<Type, Action<FeedResponseMessage>>();
+        private readonly Dictionary<Type, Func<FeedResponseMessage, CancellationToken, ValueTask>> _handlersByMessageType = new Dictionary<Type, Func<FeedResponseMessage, CancellationToken, ValueTask>>();
 
         private HeartbeatChannel? _heartbeatChannel;
         private TickerChannel? _tickerChannel;
         private Level2Channel? _level2Channel;
 
-        public void SubscribeToHeartbeatChannel(Action<HeartbeatMessage> onReceived, params string[] productIds)
+        public ChannelReader<HeartbeatMessage> SubscribeToHeartbeatChannel(params string[] productIds)
         {
-            if (!productIds.Any())
-            {
-                return;
-            }
-
             _heartbeatChannel ??= new HeartbeatChannel();
-            _heartbeatChannel.Products ??= new List<string>();
-            
+
             foreach (var productId in productIds)
             {
                 _heartbeatChannel.Products.Add(productId);
             }
 
-            AddMessageHandler(onReceived);
+            return AddMessageHandler<HeartbeatMessage>();
         }
 
-        public void SubscribeToTickerChannel(Action<TickerMessage> onReceived, params string[] productIds)
+        public ChannelReader<TickerMessage> SubscribeToTickerChannel(params string[] productIds)
         {
-            if (!productIds.Any())
-            {
-                return;
-            }
-
             _tickerChannel ??= new TickerChannel();
-            _tickerChannel.Products ??= new List<string>();
 
             foreach (var productId in productIds)
             {
                 _tickerChannel.Products.Add(productId);
             }
 
-            AddMessageHandler(onReceived);
+            return AddMessageHandler<TickerMessage>();
         }
 
-        public void SubscribeToLevel2Channel(Action<Level2SnapshotMessage> onSnapshotReceived, Action<Level2UpdateMessage> onUpdateReceived, params string[] productIds)
+        public ChannelReader<Level2Message> SubscribeToLevel2Channel(params string[] productIds)
         {
             _level2Channel ??= new Level2Channel();
-            _level2Channel.Products ??= new List<string>();
 
             foreach (var productId in productIds)
             {
                 _level2Channel.Products.Add(productId);
             }
 
-            AddMessageHandler(onSnapshotReceived);
-            AddMessageHandler(onUpdateReceived);
+            var channel = Channel.CreateUnbounded<Level2Message>();
+
+            AddMessageHandler<Level2Message, Level2SnapshotMessage>(channel);
+            AddMessageHandler<Level2Message, Level2UpdateMessage>(channel);
+
+            return channel.Reader;
         }
 
-        private void AddMessageHandler<TMessage>(Action<TMessage> onReceived) where TMessage : FeedResponseMessage
-            =>_handlersByMessageType.Add(typeof(TMessage), r => onReceived((TMessage)r));
+        private void AddMessageHandler<TCMessage, TMessage>(Channel<TCMessage> channel)
+            where TCMessage : FeedResponseMessage
+            where TMessage : TCMessage
+        {
+            _handlersByMessageType.Add(typeof(TMessage), (message, cancellationToken) => channel.Writer.WriteAsync((TCMessage) message, cancellationToken));
+        }
 
-        public IReadOnlyDictionary<Type, Action<FeedResponseMessage>> BuildHandlers()
+        private ChannelReader<TMessage> AddMessageHandler<TMessage>() where TMessage : FeedResponseMessage
+        {
+            var channel = Channel.CreateUnbounded<TMessage>();
+
+            AddMessageHandler<TMessage, TMessage>(channel);
+
+            return channel.Reader;
+        }
+
+        public IReadOnlyDictionary<Type, Func<FeedResponseMessage, CancellationToken, ValueTask>> BuildHandlers()
         {
             return _handlersByMessageType;
         }

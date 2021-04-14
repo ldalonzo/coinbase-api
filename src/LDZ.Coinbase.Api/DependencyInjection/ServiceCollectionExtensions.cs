@@ -9,7 +9,6 @@ using LDZ.Coinbase.Api.Net.WebSockets;
 using LDZ.Coinbase.Api.Options;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 
 namespace LDZ.Coinbase.Api.DependencyInjection
@@ -38,8 +37,7 @@ namespace LDZ.Coinbase.Api.DependencyInjection
 
             services
                 .AddSingleton<MarketDataFeedMessagePublisher>()
-                .AddSingleton<IMarketDataFeedMessagePublisher>(sp => sp.GetRequiredService<MarketDataFeedMessagePublisher>())
-                .TryAddEnumerable(ServiceDescriptor.Singleton<IHostedService, MarketDataFeedMessagePublisher>(sp => sp.GetRequiredService<MarketDataFeedMessagePublisher>()));
+                .AddSingleton<IMarketDataFeedMessagePublisher>(sp => sp.GetRequiredService<MarketDataFeedMessagePublisher>());
 
             services
                 .TryAddTransient<IClientWebSocketFacade, ClientWebSocketFacade>();

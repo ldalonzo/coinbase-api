@@ -101,7 +101,14 @@ namespace LDZ.Coinbase.Api.Json.Serialization
                         var propertyName = reader.GetString();
                         if (propertyName == ProductArrayConverter.ProductIds)
                         {
-                            value.Products = ProductArrayConverter.Deserialize(ref reader, options);
+                            var products = ProductArrayConverter.Deserialize(ref reader, options);
+                            if (products != null)
+                            {
+                                foreach (var product in products)
+                                {
+                                    value.Products.Add(product);
+                                }
+                            }
                         }
                     }
                 }

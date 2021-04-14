@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -29,10 +28,7 @@ namespace LDZ.Coinbase.Feed.Test.Unit
         [Fact]
         public async Task SerializeSubscribeMessageHeartbeatChannel()
         {
-            var message = SubscribeMessage.Create(new HeartbeatChannel
-            {
-                Products = new List<string> {"ETH-EUR"}
-            });
+            var message = SubscribeMessage.Create(ProductsChannel.Create<HeartbeatChannel>("ETH-EUR"));
 
             var json = JsonSerializer.Serialize<FeedRequestMessage>(message, SerializerOptions);
 
@@ -43,10 +39,7 @@ namespace LDZ.Coinbase.Feed.Test.Unit
         [Fact]
         public async Task SerializeSubscribeMessageTickerChannel()
         {
-            var message = SubscribeMessage.Create(new TickerChannel
-            {
-                Products = new List<string> {"ETH-EUR", "BTC-USD"}
-            });
+            var message = SubscribeMessage.Create(ProductsChannel.Create<TickerChannel>("ETH-EUR", "BTC-USD"));
 
             var json = JsonSerializer.Serialize<FeedRequestMessage>(message, SerializerOptions);
 
@@ -57,10 +50,7 @@ namespace LDZ.Coinbase.Feed.Test.Unit
         [Fact]
         public async Task SerializeSubscribeMessageLevel2Channel()
         {
-            var message = SubscribeMessage.Create(new Level2Channel
-            {
-                Products = new List<string> {"XTZ-EUR"}
-            });
+            var message = SubscribeMessage.Create(ProductsChannel.Create<Level2Channel>("XTZ-EUR"));
 
             var json = JsonSerializer.Serialize<FeedRequestMessage>(message, SerializerOptions);
 
