@@ -42,8 +42,8 @@ namespace LDZ.Coinbase.Test.Unit
             var client = CreateMarketDataClient(mockHttp);
             var actual = await client.GetProductAsync(productId);
 
-            Assert.NotNull(actual);
-            Assert.Equal("BTC-USD", actual.Id);
+            actual.ShouldNotBeNull();
+            actual.Id.ShouldBe("BTC-USD");
             Assert.Equal("BTC/USD", actual.DisplayName);
             Assert.Equal("BTC", actual.BaseCurrency);
             Assert.Equal("USD", actual.QuoteCurrency);
@@ -72,7 +72,8 @@ namespace LDZ.Coinbase.Test.Unit
             var client = CreateMarketDataClient(mockHttp);
             var actual = await client.GetTradesAsync(productId);
 
-            Assert.NotEmpty(actual);
+            actual.ShouldNotBeNull();
+            actual.ShouldNotBeEmpty();
             Assert.Equal(after, actual.After);
             Assert.Equal(before, actual.Before);
 
@@ -98,6 +99,7 @@ namespace LDZ.Coinbase.Test.Unit
             var client = CreateMarketDataClient(mockHttp);
             var actual = await client.GetProductOrderBookAsync(productId);
 
+            actual.ShouldNotBeNull();
             actual.Sequence.ShouldBe(3);
 
             var bestBid = actual.Bids.ShouldHaveSingleItem();
@@ -125,6 +127,7 @@ namespace LDZ.Coinbase.Test.Unit
             var client = CreateMarketDataClient(mockHttp);
             var actual = await client.GetProductOrderBookAsync(productId, AggregatedProductOrderBookLevel.LevelTwo);
 
+            actual.ShouldNotBeNull();
             actual.Sequence.ShouldBePositive();
 
             actual.Bids.ShouldNotBeEmpty();
@@ -148,6 +151,7 @@ namespace LDZ.Coinbase.Test.Unit
 
             var actual = await client.GetTimeAsync();
 
+            actual.ShouldNotBeNull();
             actual.Epoch.ShouldBe(1420674445.201m);
             actual.Iso.ShouldBe(DateTime.Parse("2015-01-07T23:47:25.201Z"));
         }

@@ -7,7 +7,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using LDZ.Coinbase.Api.Model;
-using LDZ.Coinbase.Api.Net;
+using LDZ.Coinbase.Api.Net.Http;
 using Microsoft.Extensions.Options;
 
 namespace LDZ.Coinbase.Api
@@ -23,7 +23,7 @@ namespace LDZ.Coinbase.Api
         private readonly IHttpClientFactory _factory;
         private readonly JsonSerializerOptions _serializerOptions;
 
-        public async Task<Order> PlaceNewOrderAsync(NewOrderParameters newOrder, CancellationToken cancellationToken = default)
+        public async Task<Order?> PlaceNewOrderAsync(NewOrderParameters newOrder, CancellationToken cancellationToken = default)
         {
             using var client = _factory.CreateClient(ClientNames.TradingClient);
 
@@ -35,7 +35,7 @@ namespace LDZ.Coinbase.Api
             return JsonSerializer.Deserialize<Order>(json, _serializerOptions);
         }
 
-        public async Task<Guid> CancelOrder(Guid orderId, string? productId = null, CancellationToken cancellationToken = default)
+        public async Task<Guid?> CancelOrder(Guid orderId, string? productId = null, CancellationToken cancellationToken = default)
         {
             using var client = _factory.CreateClient(ClientNames.TradingClient);
 
@@ -52,7 +52,7 @@ namespace LDZ.Coinbase.Api
             return JsonSerializer.Deserialize<Guid>(json, _serializerOptions);
         }
 
-        public async Task<IReadOnlyCollection<Guid>> CancelAllOrders(string? productId = null, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyCollection<Guid>?> CancelAllOrders(string? productId = null, CancellationToken cancellationToken = default)
         {
             using var client = _factory.CreateClient(ClientNames.TradingClient);
 
@@ -63,7 +63,7 @@ namespace LDZ.Coinbase.Api
             return JsonSerializer.Deserialize<IReadOnlyCollection<Guid>>(json, _serializerOptions);
         }
 
-        public async Task<PaginatedResult<Order>> ListOrdersAsync(CancellationToken cancellationToken = default)
+        public async Task<PaginatedResult<Order>?> ListOrdersAsync(CancellationToken cancellationToken = default)
         {
             using var client = _factory.CreateClient(ClientNames.TradingClient);
 
@@ -71,10 +71,10 @@ namespace LDZ.Coinbase.Api
             response.EnsureSuccessStatusCode();
 
             var json = await response.Content.ReadAsStringAsync(cancellationToken);
-            return PaginatedResultFactory.Create(response.Headers, JsonSerializer.Deserialize<IEnumerable<Order>>(json, _serializerOptions));
+            return PaginatedResultFactory.Create(response.Headers, JsonSerializer.Deserialize<IReadOnlyCollection<Order>>(json, _serializerOptions));
         }
 
-        public async Task<Order> GetOrderAsync(Guid id, CancellationToken cancellationToken = default)
+        public async Task<Order?> GetOrderAsync(Guid id, CancellationToken cancellationToken = default)
         {
             using var client = _factory.CreateClient(ClientNames.TradingClient);
 

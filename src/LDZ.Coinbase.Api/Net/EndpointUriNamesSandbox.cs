@@ -9,5 +9,7 @@ namespace LDZ.Coinbase.Api.Net
     internal static class EndpointUriNamesSandbox
     {
         public static readonly Uri RestApiUri = new Uri("https://api-public.sandbox.pro.coinbase.com", UriKind.Absolute);
+
+        public static readonly Uri WebsocketFeedUri = new Uri("wss://ws-feed-public.sandbox.pro.coinbase.com", UriKind.Absolute);
     }
 }

@@ -52,6 +52,7 @@ namespace LDZ.Coinbase.Test.Unit
             var client = CreateTradingClient(mockHttp);
             var actual = await client.ListOrdersAsync();
 
+            actual.ShouldNotBeNull();
             actual.Count().ShouldBe(2);
             actual.ShouldContain(o => o.Id == Guid.Parse("d0c5340b-6d6c-49d9-b567-48c4bfca13d2"));
         }
@@ -80,6 +81,8 @@ namespace LDZ.Coinbase.Test.Unit
 
             var client = CreateTradingClient(mockHttp);
             var actual = await client.CancelAllOrders();
+
+            actual.ShouldNotBeNull();
             actual.ShouldContain(c => c == Guid.Parse("144c6f8e-713f-4682-8435-5280fbe8b2b4"));
         }
 
@@ -95,6 +98,7 @@ namespace LDZ.Coinbase.Test.Unit
             var client = CreateTradingClient(mockHttp);
             var actual = await client.GetOrderAsync(id);
 
+            actual.ShouldNotBeNull();
             actual.Id.ShouldBe(id);
             actual.Price.ShouldBeNull();
             actual.Size.ShouldBe(1.00000000m);
@@ -124,6 +128,7 @@ namespace LDZ.Coinbase.Test.Unit
             var client = CreateTradingClient(mockHttp);
             var actual = await client.GetOrderAsync(id);
 
+            actual.ShouldNotBeNull();
             actual.Id.ShouldBe(id);
             actual.Price.ShouldBe(0.1m);
             actual.Size.ShouldBe(0.010000000m);

@@ -2,7 +2,6 @@ using System.Threading.Tasks;
 using LDZ.Coinbase.Api;
 using LDZ.Coinbase.Api.Model;
 using LDZ.Coinbase.Api.Model.MarketData;
-using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using Xunit;
 using Xunit.Abstractions;
@@ -10,22 +9,20 @@ using Xunit.Abstractions;
 namespace LDZ.Coinbase.Test.Integration
 {
     [Collection(nameof(CoinbaseRestApiCollection))]
-    public class TradingClientIntegrationTest : IAsyncLifetime
+    public class TradingClientIntegrationTest
     {
-        public TradingClientIntegrationTest(CoinbaseRestApiFixture fixture, ITestOutputHelper helper)
+        public TradingClientIntegrationTest(CoinbaseRestApiFixture fixture, ITestOutputHelper testOutput)
         {
-            _fixture = fixture;
-            _helper = helper;
+            _testOutput = testOutput;
 
+            MarketData = fixture.ApiFactory.CreateMarketDataClient();
+            TradingClient = fixture.ApiFactory.CreateTradingClient();
         }
 
-        private readonly CoinbaseRestApiFixture _fixture;
-        private readonly ITestOutputHelper _helper;
+        private readonly ITestOutputHelper _testOutput;
 
-        private IServiceScope _serviceScope;
-
-        private IMarketDataClient MarketData { get; set; }
-        private ITradingClient TradingClient { get; set; }
+        private IMarketDataClient MarketData { get; }
+        private ITradingClient TradingClient { get; }
 
         [Theory]
         [InlineData("BTC-USD")]
@@ -38,29 +35,14 @@ namespace LDZ.Coinbase.Test.Integration
             {
                 ProductId = productId,
                 Side = OrderSide.Buy,
-                Size = product.BaseMinSize,
-                Price = productOrderBook.GetWorstBid()
+                Size = product?.BaseMinSize,
+                Price = productOrderBook?.GetWorstBid() - product?.QuoteIncrement
             });
             newOrder.ShouldNotBeNull();
-            _helper.WriteLine($"Placed order {newOrder}");
+            _testOutput.WriteLine($"Placed order {newOrder}");
 
             var cancelledOrderId = await TradingClient.CancelOrder(newOrder.Id, productId);
             cancelledOrderId.ShouldBe(newOrder.Id);
-        }
-
-        public Task InitializeAsync()
-        {
-            _serviceScope = _fixture.ServiceProvider.CreateScope();
-
-            MarketData = _serviceScope.ServiceProvider.GetRequiredService<IMarketDataClient>();
-            TradingClient = _serviceScope.ServiceProvider.GetRequiredService<ITradingClient>();
-            return Task.CompletedTask;
-        }
-
-        public Task DisposeAsync()
-        {
-            _serviceScope.Dispose();
-            return Task.CompletedTask;
         }
     }
 }

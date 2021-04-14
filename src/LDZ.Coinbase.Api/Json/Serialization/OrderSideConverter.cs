@@ -29,6 +29,5 @@ namespace LDZ.Coinbase.Api.Json.Serialization
                     throw new ArgumentOutOfRangeException(nameof(value), value, null);
             }
         }
-            
     }
 }

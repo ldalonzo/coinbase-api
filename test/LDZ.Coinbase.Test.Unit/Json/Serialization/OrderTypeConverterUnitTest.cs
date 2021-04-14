@@ -6,19 +6,27 @@ using Xunit;
 
 namespace LDZ.Coinbase.Test.Unit.Json.Serialization
 {
-    public class OrderTypeConverterUnitTest : CustomJsonConverterUnitTest<OrderType, OrderTypeConverter>
+    public class OrderTypeConverterUnitTest
     {
+        public OrderTypeConverterUnitTest()
+        {
+            Options = new JsonSerializerOptions();
+            Options.Converters.Add(new OrderTypeConverter());
+        }
+
+        private JsonSerializerOptions Options { get; }
+
         [Theory]
         [InlineData("limit", OrderType.Limit)]
         [InlineData("market", OrderType.Market)]
         public void DeserializeSucceeds(string side, OrderType expected)
-            => Deserialize($"\"{side}\"").ShouldBe(expected);
+            => JsonSerializer.Deserialize<OrderType>($"\"{side}\"", Options).ShouldBe(expected);
 
         [Theory]
         [InlineData("")]
         [InlineData("blah")]
         [InlineData("\"blah\"")]
         public void DeserializeFails(string json)
-            => Should.Throw<JsonException>(() => Deserialize(json));
+            => Should.Throw<JsonException>(() => JsonSerializer.Deserialize<OrderType>(json, Options));
     }
 }
