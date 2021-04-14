@@ -1,21 +1,25 @@
-﻿using System;
+﻿using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Tasks;
-using LDZ.Coinbase.Api.Model;
 using LDZ.Coinbase.Api.Model.MarketData;
 
 namespace LDZ.Coinbase.Api
 {
     public static class MarketDataClientExtensions
     {
-        public static Task<PaginatedResult<Trade>?> GetTradesAsync(this IMarketDataClient client, Product product, int? after = null, CancellationToken cancellationToken = default)
+        public static async IAsyncEnumerable<Trade> GetAllTradesAsync(this IMarketDataClient client, string productId, int? after = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            if (product.Id == null)
+            while (!cancellationToken.IsCancellationRequested)
             {
-                throw new ArgumentNullException(nameof(product));
-            }
+                var trades = await client.GetTradesAsync(productId, after, cancellationToken);
 
-            return client.GetTradesAsync(product.Id, after, cancellationToken);
+                foreach (var trade in trades)
+                {
+                    yield return trade;
+                }
+
+                after = trades.After;
+            }
         }
     }
 }

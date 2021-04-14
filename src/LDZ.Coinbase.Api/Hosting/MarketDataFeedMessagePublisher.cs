@@ -111,7 +111,7 @@ namespace LDZ.Coinbase.Api.Hosting
 
             // To begin receiving feed messages, you must first send a subscribe message to the server indicating which channels and products
             // to receive. This message is mandatory - you will be disconnected if no subscribe has been received within 5 seconds.
-            var message = new SubscribeMessage {Channels = channels.ToList()};
+            var message = SubscribeMessage.Create(channels);
             var bytes = JsonSerializer.SerializeToUtf8Bytes<FeedRequestMessage>(message, _serializerOptions);
             await _webSocket.SendAsync(bytes, WebSocketMessageType.Text, true, cancellationToken);
         }

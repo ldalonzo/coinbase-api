@@ -25,7 +25,7 @@ namespace LDZ.Coinbase.Api
         /// <summary>
         /// List the latest <see cref="Trade"/>s for a <see cref="Product"/>.
         /// </summary>
-        Task<PaginatedResult<Trade>?> GetTradesAsync(string productId, int? after = null, CancellationToken cancellationToken = default);
+        Task<PaginatedResult<Trade>> GetTradesAsync(string productId, int? after = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Get a list of open orders for a product. The amount of detail shown can be customized with the <paramref name="level"/> parameter.

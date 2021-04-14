@@ -1,5 +1,7 @@
 using System;
 using System.Linq;
+using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using LDZ.Coinbase.Api;
 using LDZ.Coinbase.Api.Model.MarketData;
@@ -61,6 +63,47 @@ namespace LDZ.Coinbase.Test.Integration
             page1.ShouldNotBeEmpty();
             page2.ShouldNotBeEmpty();
             page1.Intersect(page2, new TradeTradeIdEqualityComparer()).ShouldBeEmpty();
+        }
+
+        [Theory]
+        [InlineData("BTC-USD", 400)]
+        public async Task GetAllTradesAsync(string productId, int numOfTrades)
+        {
+            var channel = Channel.CreateUnbounded<Trade>();
+            var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+
+            await foreach (var trade in MarketData.GetAllTradesAsync(productId, cancellationToken: cancellationTokenSource.Token))
+            {
+                await channel.Writer.WriteAsync(trade, cancellationTokenSource.Token);
+                if (channel.Reader.Count == numOfTrades)
+                {
+                    cancellationTokenSource.Cancel();
+                }
+            }
+
+            channel.Reader.Count.ShouldBe(numOfTrades);
+        }
+
+        [Theory]
+        [InlineData("BTC-USD", 401)]
+        public async Task GetAllTradesAsyncThrowsCancellationTokenSource(string productId, int numOfTrades)
+        {
+            var channel = Channel.CreateUnbounded<Trade>();
+            var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+
+            await Should.ThrowAsync<TaskCanceledException>(async () =>
+            {
+                await foreach (var trade in MarketData.GetAllTradesAsync(productId, cancellationToken: cancellationTokenSource.Token))
+                {
+                    await channel.Writer.WriteAsync(trade, cancellationTokenSource.Token);
+                    if (channel.Reader.Count == numOfTrades)
+                    {
+                        cancellationTokenSource.Cancel();
+                    }
+                }
+            });
+
+            channel.Reader.Count.ShouldBe(numOfTrades);
         }
 
         [Theory]
