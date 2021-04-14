@@ -1,11 +1,11 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Text.Json;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using LDZ.Coinbase.Api.Model.Feed;
 using LDZ.Coinbase.Api.Model.Feed.Channels;
@@ -31,6 +31,10 @@ namespace LDZ.Coinbase.Api.Hosting
             _serializerOptions = serializerOptions.Value;
             _subscriptionOptions = subscriptionOptions.Value;
             _webSocket = webSocket;
+
+            var channel = Channel.CreateUnbounded<FeedResponseMessage>();
+            _reader = channel.Reader;
+            _writer = channel.Writer;
         }
 
         private readonly ILogger _log;
@@ -40,7 +44,8 @@ namespace LDZ.Coinbase.Api.Hosting
         private readonly MarketDataFeedMessagePublisherOptions _subscriptionOptions;
         private readonly IClientWebSocketFacade _webSocket;
 
-        private readonly BlockingCollection<FeedResponseMessage> _messagesQueue = new BlockingCollection<FeedResponseMessage>(new ConcurrentQueue<FeedResponseMessage>(), 1024);
+        private readonly ChannelReader<FeedResponseMessage> _reader;
+        private readonly ChannelWriter<FeedResponseMessage> _writer;
 
         private IReadOnlyDictionary<Type, Action<FeedResponseMessage>>? _handlersByMessageType;
 
@@ -94,7 +99,7 @@ namespace LDZ.Coinbase.Api.Hosting
             _log.LogInformation("Stopped.");
         }
 
-        private async Task SubscribeAsync(IEnumerable<Channel> channels, CancellationToken cancellationToken)
+        private async Task SubscribeAsync(IEnumerable<FeedChannel> channels, CancellationToken cancellationToken)
         {
             if (_apiOptions.WebsocketFeedUri == null)
             {
@@ -113,21 +118,9 @@ namespace LDZ.Coinbase.Api.Hosting
 
         private async Task ConsumeMessagesAsync(CancellationToken cancellationToken)
         {
-            await Task.Yield();
-
-            while (!cancellationToken.IsCancellationRequested)
+            while (await _reader.WaitToReadAsync(cancellationToken))
             {
-                FeedResponseMessage trade;
-
-                try
-                {
-                    trade = _messagesQueue.Take(CancellationToken.None);
-                }
-                catch (InvalidOperationException ex)
-                {
-                    _log.LogTrace(ex, $"{ex.Message}");
-                    continue;
-                }
+                var trade = await _reader.ReadAsync(cancellationToken);
 
                 if (_handlersByMessageType == null || !_handlersByMessageType.TryGetValue(trade.GetType(), out var handle))
                 {
@@ -157,9 +150,9 @@ namespace LDZ.Coinbase.Api.Hosting
                 try
                 {
                     var message = await ReceiveMessageAsync(cancellationToken);
-                    _log.LogDebug($"Enqueue {message}");
 
-                    _messagesQueue.Add(message, cancellationToken);
+                    _log.LogTrace($"Enqueue {message}");
+                    await _writer.WriteAsync(message, cancellationToken);
                 }
                 catch (TaskCanceledException ex)
                 {
@@ -171,9 +164,9 @@ namespace LDZ.Coinbase.Api.Hosting
                 }
             }
 
-            _messagesQueue.CompleteAdding();
+            _writer.Complete();
 
-            _log.LogInformation($"Stopped receiving messages. {_messagesQueue.Count} messages still in queue.");
+            _log.LogInformation($"Stopped receiving messages.");
         }
 
         private async Task<FeedResponseMessage> ReceiveMessageAsync(CancellationToken cancellationToken)

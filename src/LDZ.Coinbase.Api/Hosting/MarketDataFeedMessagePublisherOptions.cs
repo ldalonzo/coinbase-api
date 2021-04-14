@@ -7,7 +7,7 @@ namespace LDZ.Coinbase.Api.Hosting
 {
     internal class MarketDataFeedMessagePublisherOptions
     {
-        public IReadOnlyCollection<Channel>? Subscriptions { get; set; }
+        public IReadOnlyCollection<FeedChannel>? Subscriptions { get; set; }
 
         public IReadOnlyDictionary<Type, Action<FeedResponseMessage>>? Handlers { get; set; }
     }

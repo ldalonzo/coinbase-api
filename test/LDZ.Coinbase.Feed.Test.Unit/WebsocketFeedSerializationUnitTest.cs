@@ -31,7 +31,7 @@ namespace LDZ.Coinbase.Feed.Test.Unit
         {
             var message = new SubscribeMessage
             {
-                Channels = new List<Channel> {new HeartbeatChannel
+                Channels = new List<FeedChannel> {new HeartbeatChannel
                 {
                     Products = new List<string> {"ETH-EUR"}
                 }}
@@ -48,7 +48,7 @@ namespace LDZ.Coinbase.Feed.Test.Unit
         {
             var message = new SubscribeMessage
             {
-                Channels = new List<Channel> {new TickerChannel
+                Channels = new List<FeedChannel> {new TickerChannel
                 {
                     Products = new List<string> {"ETH-EUR","BTC-USD"}
                 }}
@@ -65,7 +65,7 @@ namespace LDZ.Coinbase.Feed.Test.Unit
         {
             var message = new SubscribeMessage
             {
-                Channels = new List<Channel> {new Level2Channel
+                Channels = new List<FeedChannel> {new Level2Channel
                 {
                     Products = new List<string> {"XTZ-EUR"}
                 }}

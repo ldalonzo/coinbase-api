@@ -6,11 +6,11 @@ using LDZ.Coinbase.Api.Model.Feed.Channels;
 
 namespace LDZ.Coinbase.Api.Json.Serialization
 {
-    internal class ChannelConverter : JsonConverter<Channel>
+    internal class FeedChannelConverter : JsonConverter<FeedChannel>
     {
         private const string Name = "name";
 
-        public override Channel? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        public override FeedChannel? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             if (reader.TokenType != JsonTokenType.StartObject)
             {
@@ -45,7 +45,7 @@ namespace LDZ.Coinbase.Api.Json.Serialization
             };
         }
 
-        public override void Write(Utf8JsonWriter writer, Channel value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, FeedChannel value, JsonSerializerOptions options)
         {
             writer.WriteStartObject();
 

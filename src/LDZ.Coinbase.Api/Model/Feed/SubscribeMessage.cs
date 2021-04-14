@@ -5,6 +5,6 @@ namespace LDZ.Coinbase.Api.Model.Feed
 {
     public class SubscribeMessage : FeedRequestMessage
     {
-        public ICollection<Channel>? Channels { get; set; }
+        public ICollection<FeedChannel>? Channels { get; set; }
     }
 }

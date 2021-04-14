@@ -306,7 +306,7 @@ namespace LDZ.Coinbase.Api.Json.Serialization
                         {
                             case "channels":
 
-                                value.Channels = new List<Channel>();
+                                value.Channels = new List<FeedChannel>();
 
                                 reader.Read();
                                 if (reader.TokenType != JsonTokenType.StartArray)
@@ -317,7 +317,7 @@ namespace LDZ.Coinbase.Api.Json.Serialization
                                 reader.Read();
                                 while (reader.TokenType != JsonTokenType.EndArray)
                                 {
-                                    var channel = JsonSerializer.Deserialize<Channel>(ref reader, options);
+                                    var channel = JsonSerializer.Deserialize<FeedChannel>(ref reader, options);
                                     if (channel == null)
                                     {
                                         throw new JsonException();

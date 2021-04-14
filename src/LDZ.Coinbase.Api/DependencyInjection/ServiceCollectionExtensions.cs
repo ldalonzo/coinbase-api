@@ -75,7 +75,7 @@ namespace LDZ.Coinbase.Api.DependencyInjection
                 options.Converters.Add(new OrderTypeConverter());
                 options.Converters.Add(new TradeSideConverter());
 
-                options.Converters.Add(new ChannelConverter());
+                options.Converters.Add(new FeedChannelConverter());
                 options.Converters.Add(new FeedRequestMessageConverter());
                 options.Converters.Add(new FeedResponseMessageConverter());
 

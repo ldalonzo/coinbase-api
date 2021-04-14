@@ -6,7 +6,7 @@ namespace LDZ.Coinbase.Api.Model.Feed
 {
     public class SubscriptionsMessage : FeedResponseMessage
     {
-        public ICollection<Channel>? Channels { get; set; }
+        public ICollection<FeedChannel>? Channels { get; set; }
 
         public override string ToString()
         {

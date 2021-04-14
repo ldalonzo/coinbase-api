@@ -72,10 +72,10 @@ namespace LDZ.Coinbase.Api.Hosting
             return _handlersByMessageType;
         }
 
-        public IReadOnlyCollection<Channel> BuildSubscriptions()
+        public IReadOnlyCollection<FeedChannel> BuildSubscriptions()
             => EnumerateSubscriptions().ToList();
 
-        private IEnumerable<Channel> EnumerateSubscriptions()
+        private IEnumerable<FeedChannel> EnumerateSubscriptions()
         {
             if (_heartbeatChannel != null)
             {
