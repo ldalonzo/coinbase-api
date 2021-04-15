@@ -74,7 +74,7 @@ namespace LDZ.Coinbase.Test.Integration
 
             await foreach (var trade in MarketData.GetAllTradesAsync(productId, cancellationToken: cancellationTokenSource.Token))
             {
-                await channel.Writer.WriteAsync(trade, cancellationTokenSource.Token);
+                await channel.Writer.WriteAsync(trade, CancellationToken.None);
                 if (channel.Reader.Count == numOfTrades)
                 {
                     cancellationTokenSource.Cancel();
@@ -102,8 +102,6 @@ namespace LDZ.Coinbase.Test.Integration
                     }
                 }
             });
-
-            channel.Reader.Count.ShouldBe(numOfTrades);
         }
 
         [Theory]

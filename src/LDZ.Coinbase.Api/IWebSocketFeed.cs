@@ -5,7 +5,7 @@ using LDZ.Coinbase.Api.Model.Feed;
 
 namespace LDZ.Coinbase.Api
 {
-    public interface IMarketDataFeedMessagePublisher
+    public interface IWebSocketFeed
     {
         /// <summary>
         /// To receive heartbeat messages for specific products once a second subscribe to the heartbeat channel.

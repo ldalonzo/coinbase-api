@@ -17,7 +17,7 @@ using Xunit.Abstractions;
 
 namespace LDZ.Coinbase.Feed.Test.Unit
 {
-    public class WebSocketFeedUnitTest
+    public class WebSocketFeedUnitTest : IAsyncLifetime
     {
         public WebSocketFeedUnitTest(ITestOutputHelper testOutput)
         {
@@ -26,6 +26,8 @@ namespace LDZ.Coinbase.Feed.Test.Unit
 
         private readonly ITestOutputHelper _testOutput;
 
+        private IWebSocketFeed? WebSocketFeed { get; set; }
+
         [Fact]
         public async Task SubscribeToHeartbeatChannel()
         {
@@ -33,12 +35,12 @@ namespace LDZ.Coinbase.Feed.Test.Unit
             webSocketMock.SetupReceiveAsyncSequence()
                 .Returns("TestData/message_BTC-USD_heartbeat.json");
 
-            var webSocketFeed = CreateWebSocketFeed(webSocketMock);
+            WebSocketFeed = CreateWebSocketFeed(webSocketMock);
 
-            var spy = await webSocketFeed
-                .SubscribeToHeartbeatChannel("BTC-USD")
-                .RecordMessagesAsync(webSocketFeed, _testOutput, TimeSpan.FromMilliseconds(100));
+            var spyTask = WebSocketFeed.SubscribeToHeartbeatChannel("BTC-USD").Spy(_testOutput, TimeSpan.FromMilliseconds(100));
+            await WebSocketFeed.StartAsync();
 
+            var spy = await spyTask;
             webSocketMock.Verify(socket => socket.ConnectAsync(It.Is<Uri>(u => u == EndpointUriNames.WebsocketFeedUri), It.IsAny<CancellationToken>()), Times.Exactly(1));
             webSocketMock.Verify(socket => socket.SendAsync(It.Is<ReadOnlyMemory<byte>>(buffer => buffer.ContainsUtf8String("\"heartbeat\",\"product_ids\":[\"BTC-USD\"]") ), It.Is<WebSocketMessageType>(t => t == WebSocketMessageType.Text), It.Is<bool>(b => b), It.IsAny<CancellationToken>()), Times.Exactly(1));
 
@@ -52,11 +54,11 @@ namespace LDZ.Coinbase.Feed.Test.Unit
             webSocketMock.SetupReceiveAsyncSequence()
                 .Returns("TestData/message_ETH-EUR_ticker.json");
 
-            var webSocketFeed = CreateWebSocketFeed(webSocketMock);
-            var spy = await webSocketFeed
-                .SubscribeToTickerChannel("ETH-EUR")
-                .RecordMessagesAsync(webSocketFeed, _testOutput, TimeSpan.FromMilliseconds(100));
+            WebSocketFeed = CreateWebSocketFeed(webSocketMock);
+            var spyTask = WebSocketFeed.SubscribeToTickerChannel("ETH-EUR").Spy(_testOutput, TimeSpan.FromMilliseconds(100));
+            await WebSocketFeed.StartAsync();
 
+            var spy = await spyTask;
             webSocketMock.Verify(socket => socket.ConnectAsync(It.Is<Uri>(u => u == EndpointUriNames.WebsocketFeedUri), It.IsAny<CancellationToken>()), Times.Exactly(1));
             webSocketMock.Verify(socket => socket.SendAsync(It.Is<ReadOnlyMemory<byte>>(buffer => buffer.ContainsUtf8String("\"ticker\",\"product_ids\":[\"ETH-EUR\"]")), It.Is<WebSocketMessageType>(t => t == WebSocketMessageType.Text), It.Is<bool>(j => j), It.IsAny<CancellationToken>()), Times.Exactly(1));
             spy.ReceivedMessages.OfType<TickerMessage>().ShouldHaveSingleItem();
@@ -72,19 +74,19 @@ namespace LDZ.Coinbase.Feed.Test.Unit
                 .Returns("TestData/message_XTZ-EUR_l2update_buy.json")
                 .Returns("TestData/message_XTZ-EUR_l2update_sell.json");
 
-            var webSocketFeed = CreateWebSocketFeed(webSocketMock);
+            WebSocketFeed = CreateWebSocketFeed(webSocketMock);
 
-            var spy = await webSocketFeed
-                .SubscribeToLevel2Channel("XTZ-EUR")
-                .RecordMessagesAsync(webSocketFeed, _testOutput, TimeSpan.FromMilliseconds(100));
+            var spyTask = WebSocketFeed.SubscribeToLevel2Channel("XTZ-EUR").Spy(_testOutput, TimeSpan.FromMilliseconds(100));
+            await WebSocketFeed.StartAsync();
 
+            var spy = await spyTask;
             webSocketMock.Verify(socket => socket.ConnectAsync(It.Is<Uri>(u => u == EndpointUriNames.WebsocketFeedUri), It.IsAny<CancellationToken>()), Times.Exactly(1));
             webSocketMock.Verify(socket => socket.SendAsync(It.Is<ReadOnlyMemory<byte>>(buffer => buffer.ContainsUtf8String("\"level2\",\"product_ids\":[\"XTZ-EUR\"]")), It.Is<WebSocketMessageType>(t => t == WebSocketMessageType.Text), It.Is<bool>(j => j), It.IsAny<CancellationToken>()), Times.Exactly(1));
             spy.ReceivedMessages.OfType<Level2SnapshotMessage>().ShouldHaveSingleItem();
             spy.ReceivedMessages.OfType<Level2UpdateMessage>().ShouldNotBeEmpty();
         }
 
-        private static IMarketDataFeedMessagePublisher CreateWebSocketFeed(Mock<IClientWebSocketFacade> webSocketMock)
+        private static IWebSocketFeed CreateWebSocketFeed(IMock<IClientWebSocketFacade> webSocketMock)
         {
             var services = new ServiceCollection();
 
@@ -94,7 +96,20 @@ namespace LDZ.Coinbase.Feed.Test.Unit
                 .AddCoinbaseProApi()
                 .BuildServiceProvider();
 
-            return serviceProvider.GetRequiredService<IMarketDataFeedMessagePublisher>();
+            return serviceProvider.GetRequiredService<IWebSocketFeed>();
+        }
+
+        public Task InitializeAsync()
+        {
+            return Task.CompletedTask;
+        }
+
+        public async Task DisposeAsync()
+        {
+            if (WebSocketFeed != null)
+            {
+                await WebSocketFeed.StopAsync();
+            }
         }
     }
 }

@@ -1,6 +1,4 @@
 using System.Collections.Generic;
-using System.Threading.Channels;
-using System.Threading.Tasks;
 using LDZ.Coinbase.Api.Model.Feed;
 using Xunit.Abstractions;
 
@@ -23,15 +21,6 @@ namespace LDZ.Coinbase.Test.Shared
         {
             _receivedMessages.Add(message);
             _testOutputHelper.WriteLine($"Received {message}");
-        }
-
-        public async Task ReceiveFromChannelAsync<T>(ChannelReader<T> reader)
-            where T : FeedResponseMessage
-        {
-            while (await reader.WaitToReadAsync())
-            {
-                ReceiveMessage(await reader.ReadAsync());
-            }
         }
     }
 }

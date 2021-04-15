@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.WebSockets;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Channels;
@@ -12,27 +12,26 @@ using LDZ.Coinbase.Api.Model.Feed;
 using LDZ.Coinbase.Api.Model.Feed.Channels;
 using LDZ.Coinbase.Api.Net.WebSockets;
 using LDZ.Coinbase.Api.Options;
+using LDZ.Coinbase.Api.Threading.Channels;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace LDZ.Coinbase.Api.Hosting
 {
-    internal class MarketDataFeedMessagePublisher : IMarketDataFeedMessagePublisher
+    internal class WebSocketFeed : IWebSocketFeed
     {
-        public MarketDataFeedMessagePublisher(
-            ILogger<MarketDataFeedMessagePublisher> log,
+        public WebSocketFeed(
+            ILogger<WebSocketFeed> log,
             IOptions<CoinbaseApiOptions> apiOptions,
             IOptions<JsonSerializerOptions> serializerOptions,
-            IClientWebSocketFacade webSocket)
+            IClientWebSocketFacade webSocket,
+            ChannelDemux<FeedResponseMessage> demux)
         {
             _log = log;
             _apiOptions = apiOptions.Value;
             _serializerOptions = serializerOptions.Value;
             _webSocket = webSocket;
-
-            var channel = Channel.CreateUnbounded<FeedResponseMessage>();
-            _reader = channel.Reader;
-            _writer = channel.Writer;
+            _demux = demux;
         }
 
         private readonly ILogger _log;
@@ -40,43 +39,42 @@ namespace LDZ.Coinbase.Api.Hosting
         private readonly CoinbaseApiOptions _apiOptions;
         private readonly JsonSerializerOptions _serializerOptions;
         private readonly IClientWebSocketFacade _webSocket;
+        private readonly ChannelDemux<FeedResponseMessage> _demux;
 
-        private readonly WebSocketSubscriptionsBuilder _subscriptionsBuilder = new WebSocketSubscriptionsBuilder();
-
-        private readonly ChannelReader<FeedResponseMessage> _reader;
-        private readonly ChannelWriter<FeedResponseMessage> _writer;
-
-        private IReadOnlyDictionary<Type, Func<FeedResponseMessage, CancellationToken, ValueTask>>? _handlersByMessageType;
+        private WebSocketSubscriptionsBuilder SubscriptionsBuilder { get; } = new WebSocketSubscriptionsBuilder();
 
         private CancellationTokenSource? _cancellationTokenSource;
         private Task? _producerConsumerTask;
 
         public ChannelReader<HeartbeatMessage> SubscribeToHeartbeatChannel(params string[] productIds)
         {
-            return _subscriptionsBuilder.SubscribeToHeartbeatChannel(productIds);
+            SubscriptionsBuilder.SubscribeToHeartbeatChannel(productIds);
+            return _demux.AddSink<HeartbeatMessage>();
         }
 
         public ChannelReader<TickerMessage> SubscribeToTickerChannel(params string[] productIds)
         {
-            return _subscriptionsBuilder.SubscribeToTickerChannel(productIds);
+            SubscriptionsBuilder.SubscribeToTickerChannel(productIds);
+            return _demux.AddSink<TickerMessage>();
         }
 
         public ChannelReader<Level2Message> SubscribeToLevel2Channel(params string[] productIds)
         {
-            return _subscriptionsBuilder.SubscribeToLevel2Channel(productIds);
+            SubscriptionsBuilder.SubscribeToLevel2Channel(productIds);
+            return _demux.AddSink<Level2Message>();
         }
 
         public async Task StartAsync(CancellationToken cancellationToken = default)
         {
-            _handlersByMessageType = _subscriptionsBuilder.BuildHandlers();
-
-            await SubscribeAsync(_subscriptionsBuilder.BuildSubscriptions(), cancellationToken);
+            await SubscribeAsync(SubscriptionsBuilder.BuildSubscriptions(), cancellationToken);
 
             _cancellationTokenSource = new CancellationTokenSource();
 
+            var channel = Channel.CreateUnbounded<FeedResponseMessage>();
+
             _producerConsumerTask = Task.WhenAll(
-                ReceiveMessagesAsync(_cancellationTokenSource.Token),
-                ConsumeMessagesAsync(_cancellationTokenSource.Token));
+                ReceiveAllMessagesAsync(channel.Writer, _cancellationTokenSource.Token),
+                _demux.WriteAsync(channel.Reader, _cancellationTokenSource.Token));
 
             _log.LogInformation("Started.");
         }
@@ -124,57 +122,27 @@ namespace LDZ.Coinbase.Api.Hosting
             await _webSocket.SendAsync(bytes, WebSocketMessageType.Text, true, CancellationToken.None);
         }
 
-        private async Task ConsumeMessagesAsync(CancellationToken cancellationToken)
+        private async Task ReceiveAllMessagesAsync(ChannelWriter<FeedResponseMessage> writer, CancellationToken cancellationToken)
         {
-            while (await _reader.WaitToReadAsync(cancellationToken))
+            try
             {
-                var trade = await _reader.ReadAsync(cancellationToken);
-
-                if (_handlersByMessageType == null || !_handlersByMessageType.TryGetValue(trade.GetType(), out var handle))
+                await foreach (var message in ReceiveAllMessagesAsync(cancellationToken))
                 {
-                    _log.LogInformation($"Drop {trade}");
-                    continue;
-                }
-
-                _log.LogInformation($"Dispatch {trade}");
-
-                try
-                {
-                    await handle(trade, cancellationToken);
-                }
-                catch (Exception ex)
-                {
-                    _log.LogError(ex, ex.Message);
+                    await writer.WriteAsync(message, cancellationToken);
                 }
             }
-
-            _log.LogInformation("Stopped consuming messages.");
+            catch (TaskCanceledException)
+            {
+                writer.Complete();
+            }
         }
 
-        private async Task ReceiveMessagesAsync(CancellationToken cancellationToken)
+        private async IAsyncEnumerable<FeedResponseMessage> ReceiveAllMessagesAsync([EnumeratorCancellation] CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                try
-                {
-                    var message = await ReceiveMessageAsync(cancellationToken);
-
-                    _log.LogTrace($"Enqueue {message}");
-                    await _writer.WriteAsync(message, cancellationToken);
-                }
-                catch (TaskCanceledException ex)
-                {
-                    _log.LogDebug(ex.Message);
-                }
-                catch (Exception ex)
-                {
-                    _log.LogError(ex, ex.Message);
-                }
+                yield return await ReceiveMessageAsync(cancellationToken);
             }
-
-            _writer.Complete();
-
-            _log.LogInformation($"Stopped receiving messages.");
         }
 
         private async Task<FeedResponseMessage> ReceiveMessageAsync(CancellationToken cancellationToken)

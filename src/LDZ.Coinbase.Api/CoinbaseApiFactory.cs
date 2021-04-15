@@ -32,8 +32,8 @@ namespace LDZ.Coinbase.Api
         public ITradingClient CreateTradingClient()
             => ServiceProvider.CreateScope().ServiceProvider.GetRequiredService<ITradingClient>();
 
-        public IMarketDataFeedMessagePublisher CreateWebSocketFeed()
-            => ServiceProvider.CreateScope().ServiceProvider.GetRequiredService<IMarketDataFeedMessagePublisher>();
+        public IWebSocketFeed CreateWebSocketFeed()
+            => ServiceProvider.CreateScope().ServiceProvider.GetRequiredService<IWebSocketFeed>();
 
         public void Dispose()
         {

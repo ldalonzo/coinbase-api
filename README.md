@@ -36,20 +36,24 @@ var orders = await tradingClient.ListOrdersAsync();
 ```csharp
 static async Task Main(string[] args)
 {
-    var factory = CoinbaseApiFactory.Create(builder => builder.ConfigureFeed(feedBuilder =>
-    {
-        feedBuilder.SubscribeToHeartbeatChannel(OnMessageReceived, "BTC-USD");
-    }));
+    using var factory = CoinbaseApiFactory.Create();
+    var webSocketFeed = factory.CreateWebSocketFeed();
 
-    var dataFeed = await factory.StartMarketDataFeed();
+    var readerTask = ReadChannelAsync(webSocketFeed.SubscribeToHeartbeatChannel("BTC-EUR"));
+    await webSocketFeed.StartAsync();
 
     Console.ReadKey();
-    await dataFeed.StopAsync();
+    await webSocketFeed.StopAsync();
+
+    await readerTask;
 }
 
-private static void OnMessageReceived(HeartbeatMessage message)
+private static async Task ReadChannelAsync(ChannelReader<HeartbeatMessage> reader)
 {
-    Console.WriteLine(message);
+    while (await reader.WaitToReadAsync())
+    {
+        Console.WriteLine(await reader.ReadAsync());
+    }
 }
 ```
 
