@@ -3,13 +3,13 @@ using LDZ.Coinbase.Api.Model.Feed.Channels;
 
 namespace LDZ.Coinbase.Api.Hosting
 {
-    internal class WebSocketSubscriptionsBuilder
+    internal class WebSocketSubscriptionsBuilder : IWebSocketSubscriptionsBuilder
     {
         private HeartbeatChannel? _heartbeatChannel;
         private TickerChannel? _tickerChannel;
         private Level2Channel? _level2Channel;
 
-        public void SubscribeToHeartbeatChannel(params string[] productIds)
+        public IWebSocketSubscriptionsBuilder AddHeartbeatChannel(params string[] productIds)
         {
             _heartbeatChannel ??= new HeartbeatChannel();
 
@@ -17,9 +17,11 @@ namespace LDZ.Coinbase.Api.Hosting
             {
                 _heartbeatChannel.Products.Add(productId);
             }
+
+            return this;
         }
 
-        public void SubscribeToTickerChannel(params string[] productIds)
+        public IWebSocketSubscriptionsBuilder AddTickerChannel(params string[] productIds)
         {
             _tickerChannel ??= new TickerChannel();
 
@@ -27,9 +29,11 @@ namespace LDZ.Coinbase.Api.Hosting
             {
                 _tickerChannel.Products.Add(productId);
             }
+
+            return this;
         }
 
-        public void SubscribeToLevel2Channel(params string[] productIds)
+        public IWebSocketSubscriptionsBuilder AddLevel2Channel(params string[] productIds)
         {
             _level2Channel ??= new Level2Channel();
 
@@ -37,6 +41,8 @@ namespace LDZ.Coinbase.Api.Hosting
             {
                 _level2Channel.Products.Add(productId);
             }
+
+            return this;
         }
 
         public IEnumerable<FeedChannel> BuildSubscriptions()

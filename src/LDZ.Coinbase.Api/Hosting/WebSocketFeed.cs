@@ -12,7 +12,6 @@ using LDZ.Coinbase.Api.Model.Feed;
 using LDZ.Coinbase.Api.Model.Feed.Channels;
 using LDZ.Coinbase.Api.Net.WebSockets;
 using LDZ.Coinbase.Api.Options;
-using LDZ.Coinbase.Api.Threading.Channels;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -24,14 +23,12 @@ namespace LDZ.Coinbase.Api.Hosting
             ILogger<WebSocketFeed> log,
             IOptions<CoinbaseApiOptions> apiOptions,
             IOptions<JsonSerializerOptions> serializerOptions,
-            IClientWebSocketFacade webSocket,
-            ChannelDemux<FeedResponseMessage> demux)
+            IClientWebSocketFacade webSocket)
         {
             _log = log;
             _apiOptions = apiOptions.Value;
             _serializerOptions = serializerOptions.Value;
             _webSocket = webSocket;
-            _demux = demux;
         }
 
         private readonly ILogger _log;
@@ -39,44 +36,45 @@ namespace LDZ.Coinbase.Api.Hosting
         private readonly CoinbaseApiOptions _apiOptions;
         private readonly JsonSerializerOptions _serializerOptions;
         private readonly IClientWebSocketFacade _webSocket;
-        private readonly ChannelDemux<FeedResponseMessage> _demux;
 
-        private WebSocketSubscriptionsBuilder SubscriptionsBuilder { get; } = new WebSocketSubscriptionsBuilder();
+        private readonly Channel<FeedResponseMessage> _channel = Channel.CreateUnbounded<FeedResponseMessage>();
+
+        public ChannelReader<FeedResponseMessage> ChannelReader => _channel.Reader;
 
         private CancellationTokenSource? _cancellationTokenSource;
-        private Task? _producerConsumerTask;
+        private Task? _receiveAllMessagesTask;
 
-        public ChannelReader<HeartbeatMessage> SubscribeToHeartbeatChannel(params string[] productIds)
+        public async Task Subscribe(Action<IWebSocketSubscriptionsBuilder> configure, CancellationToken cancellationToken = default)
         {
-            SubscriptionsBuilder.SubscribeToHeartbeatChannel(productIds);
-            return _demux.AddSink<HeartbeatMessage>();
+            var builder = new WebSocketSubscriptionsBuilder();
+            configure(builder);
+
+            await SendSubscribeMessage(builder);
+
+            if (_cancellationTokenSource == null)
+            {
+                _cancellationTokenSource = new CancellationTokenSource();
+                _receiveAllMessagesTask = ReceiveAllMessagesAsync(_channel.Writer, _cancellationTokenSource.Token);
+            }
         }
 
-        public ChannelReader<TickerMessage> SubscribeToTickerChannel(params string[] productIds)
+        public async Task ConnectAsync(CancellationToken cancellationToken = default)
         {
-            SubscriptionsBuilder.SubscribeToTickerChannel(productIds);
-            return _demux.AddSink<TickerMessage>();
-        }
+            if (_apiOptions.WebsocketFeedUri == null)
+            {
+                throw new InvalidOperationException("Websocket Feed URL is not specified.");
+            }
 
-        public ChannelReader<Level2Message> SubscribeToLevel2Channel(params string[] productIds)
-        {
-            SubscriptionsBuilder.SubscribeToLevel2Channel(productIds);
-            return _demux.AddSink<Level2Message>();
-        }
-
-        public async Task StartAsync(CancellationToken cancellationToken = default)
-        {
-            await SubscribeAsync(SubscriptionsBuilder.BuildSubscriptions(), cancellationToken);
-
-            _cancellationTokenSource = new CancellationTokenSource();
-
-            var channel = Channel.CreateUnbounded<FeedResponseMessage>();
-
-            _producerConsumerTask = Task.WhenAll(
-                ReceiveAllMessagesAsync(channel.Writer, _cancellationTokenSource.Token),
-                _demux.WriteAsync(channel.Reader, _cancellationTokenSource.Token));
-
-            _log.LogInformation("Started.");
+            try
+            {
+                await _webSocket.ConnectAsync(_apiOptions.WebsocketFeedUri, cancellationToken);
+                _log.LogInformation($"Connected to {_apiOptions.WebsocketFeedUri}");
+            }
+            catch (WebSocketException ex)
+            {
+                _log.LogError($"Failed to connect. {ex.Message}");
+                throw;
+            }
         }
 
         public async Task StopAsync(CancellationToken cancellationToken = default)
@@ -85,36 +83,17 @@ namespace LDZ.Coinbase.Api.Hosting
 
             _cancellationTokenSource?.Cancel();
 
-            if (_producerConsumerTask != null)
+            if (_receiveAllMessagesTask != null)
             {
-                try
-                {
-                    await _producerConsumerTask;
-                }
-                catch (Exception ex)
-                {
-                    _log.LogTrace(ex, ex.Message);
-                }
+                await _receiveAllMessagesTask;
             }
 
             _log.LogInformation("Stopped.");
         }
 
-        private async Task SubscribeAsync(IEnumerable<FeedChannel> channels, CancellationToken cancellationToken)
-        {
-            if (_apiOptions.WebsocketFeedUri == null)
-            {
-                throw new InvalidOperationException();
-            }
-
-            await _webSocket.ConnectAsync(_apiOptions.WebsocketFeedUri, cancellationToken);
-            _log.LogInformation($"connected to {_apiOptions.WebsocketFeedUri}");
-
-            // To begin receiving feed messages, you must first send a subscribe message to the server indicating which channels and products
-            // to receive. This message is mandatory - you will be disconnected if no subscribe has been received within 5 seconds.
-            await SendSubscribeMessage(channels.ToArray());
-        }
-
+        private Task SendSubscribeMessage(WebSocketSubscriptionsBuilder builder)
+            => SendSubscribeMessage(builder.BuildSubscriptions().ToArray());
+       
         private async Task SendSubscribeMessage(params FeedChannel[] channels)
         {
             var message = SubscribeMessage.Create(channels);
@@ -147,18 +126,14 @@ namespace LDZ.Coinbase.Api.Hosting
 
         private async Task<FeedResponseMessage> ReceiveMessageAsync(CancellationToken cancellationToken)
         {
-            var buffer = new ArraySegment<byte>(new byte[2048]);
-            if (buffer.Array == null)
-            {
-                throw new InvalidOperationException();
-            }
+            var buffer = new Memory<byte>(new byte[2048]);
 
             ValueWebSocketReceiveResult result;
             await using var stream = new MemoryStream();
             do
             {
                 result = await _webSocket.ReceiveAsync(buffer, cancellationToken);
-                await stream.WriteAsync(buffer.Array.AsMemory(buffer.Offset, result.Count), cancellationToken);
+                await stream.WriteAsync(buffer.Slice(0, result.Count), cancellationToken);
             } while (!result.EndOfMessage);
 
             stream.Seek(0, SeekOrigin.Begin);

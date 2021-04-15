@@ -7,7 +7,6 @@ using LDZ.Coinbase.Api.Net.Http;
 using LDZ.Coinbase.Api.Net.Http.Headers;
 using LDZ.Coinbase.Api.Net.WebSockets;
 using LDZ.Coinbase.Api.Options;
-using LDZ.Coinbase.Api.Threading.Channels;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
@@ -33,10 +32,9 @@ namespace LDZ.Coinbase.Api.DependencyInjection
                 .AddTransient<IMarketDataClient, MarketDataClient>()
                 .AddTransient<ITradingClient, TradingClient>()
                 .AddTransient<MessageAuthenticationCodeHandler>()
-                .AddTransient(typeof(ChannelDemux<>))
                 .AddSingleton<ThrottlingPolicy>()
                 .AddTransient<ThrottlingPolicyHandler>()
-                .AddSingleton<IWebSocketFeed, WebSocketFeed>();
+                .AddScoped<IWebSocketFeed, WebSocketFeed>();
 
             services
                 .TryAddTransient<IClientWebSocketFacade, ClientWebSocketFacade>();

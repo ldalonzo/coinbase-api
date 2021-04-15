@@ -1,7 +1,7 @@
 [![CI](https://github.com/ldalonzo/coinbase-api/actions/workflows/ci.yml/badge.svg)](https://github.com/ldalonzo/coinbase-api/actions/workflows/ci.yml) [![nuget](https://img.shields.io/nuget/vpre/LDZ.Coinbase.Api)](https://www.nuget.org/packages/LDZ.Coinbase.Api) [![codecov](https://codecov.io/gh/ldalonzo/coinbase-api/branch/develop/graph/badge.svg?token=8CPL3UFFJZ)](https://codecov.io/gh/ldalonzo/coinbase-api)
 
 # Coinbase Pro API
-A .NET client for the [Coinbase Pro REST API](https://docs.pro.coinbase.com/#api).
+A .NET client for the [Coinbase Pro API](https://docs.pro.coinbase.com/).
 
 ## Quick start
 
@@ -39,16 +39,18 @@ static async Task Main(string[] args)
     using var factory = CoinbaseApiFactory.Create();
     var webSocketFeed = factory.CreateWebSocketFeed();
 
-    var readerTask = ReadChannelAsync(webSocketFeed.SubscribeToHeartbeatChannel("BTC-EUR"));
-    await webSocketFeed.StartAsync();
+    await webSocketFeed.ConnectAsync();
+    await webSocketFeed.Subscribe(b => b.AddHeartbeatChannel("ETH-EUR"));
+
+    var readChannelTask = ReadChannelAsync(webSocketFeed.ChannelReader);
 
     Console.ReadKey();
     await webSocketFeed.StopAsync();
 
-    await readerTask;
+    await readChannelTask;
 }
 
-private static async Task ReadChannelAsync(ChannelReader<HeartbeatMessage> reader)
+private static async Task ReadChannelAsync(ChannelReader<FeedResponseMessage> reader)
 {
     while (await reader.WaitToReadAsync())
     {

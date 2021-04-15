@@ -11,18 +11,9 @@ namespace LDZ.Coinbase.Test.Unit
 {
     public static class MockHttpMessageHandlerServiceCollectionExtensions
     {
-        public static T CreateClient<T>(this IServiceCollection services, MockHttpMessageHandler mockHttp) where T : notnull => services
-            .AddCoinbaseProApi()
-            .AddMockHttpClient(mockHttp)
-            .BuildServiceProvider()
-            .GetRequiredService<T>();
-
-        private static IServiceCollection AddMockHttpClient(this IServiceCollection services, MockHttpMessageHandler messageHandler)
-        {
-            services.AddSingleton(provider => CreateMockHttpClientFactory(provider, messageHandler));
-
-            return services;
-        }
+        public static IServiceCollection AddCoinbaseProApi(this IServiceCollection services, MockHttpMessageHandler messageHandler) => services
+            .AddSingleton(provider => CreateMockHttpClientFactory(provider, messageHandler))
+            .AddCoinbaseProApi();
 
         private static IHttpClientFactory CreateMockHttpClientFactory(IServiceProvider provider, MockHttpMessageHandler mockHttp)
         {

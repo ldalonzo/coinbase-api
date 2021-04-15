@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using LDZ.Coinbase.Api;
 using LDZ.Coinbase.Api.Model.Feed;
@@ -18,7 +17,7 @@ namespace LDZ.Coinbase.Test.Integration
         {
             _testOutput = testOutput;
 
-            Factory = CoinbaseApiFactory.Create(configureOptions: options => options.UseSandbox());
+            Factory = CoinbaseApiFactory.Create(configureOptions: options => options.UseProduction());
             WebSocketFeed = Factory.CreateWebSocketFeed();
         }
 
@@ -31,10 +30,9 @@ namespace LDZ.Coinbase.Test.Integration
         [InlineData("BTC-USD")]
         public async Task SubscribeToHeartbeatChannel(string productId)
         {
-            var spyTask = WebSocketFeed.SubscribeToHeartbeatChannel(productId).Spy(_testOutput, TimeSpan.FromSeconds(3));
-
-            await WebSocketFeed.StartAsync();
-            var spy = await spyTask;
+            await WebSocketFeed.Subscribe(b => b.AddHeartbeatChannel(productId));
+            
+            var spy = await WebSocketFeed.ChannelReader.Spy(_testOutput, TimeSpan.FromSeconds(3));
 
             spy.ReceivedMessages.ShouldNotBeEmpty();
             var actualMessages = spy.ReceivedMessages.OfType<HeartbeatMessage>().ToList();
@@ -43,29 +41,12 @@ namespace LDZ.Coinbase.Test.Integration
         }
 
         [Theory]
-        [InlineData("BTC-USD", "BTC-EUR")]
-        public async Task SubscribeToMultipleHeartbeatChannels(string productId1, string productId2)
-        {
-            var timeoutSource = new CancellationTokenSource(TimeSpan.FromSeconds(3));
-            var spyTask1 = WebSocketFeed.SubscribeToHeartbeatChannel(productId1).Spy(_testOutput, timeoutSource.Token);
-            var spyTask2 = WebSocketFeed.SubscribeToHeartbeatChannel(productId2).Spy(_testOutput, timeoutSource.Token);
-
-            await WebSocketFeed.StartAsync(CancellationToken.None);
-            var spy1 = await spyTask1;
-            var spy2 = await spyTask2;
-
-            spy1.ReceivedMessages.OfType<HeartbeatMessage>().ShouldContain(m => m.ProductId == productId1);
-            spy2.ReceivedMessages.OfType<HeartbeatMessage>().ShouldContain(m => m.ProductId == productId2);
-        }
-
-        [Theory]
         [InlineData("BTC-USD")]
         public async Task SubscribeToTickerChannel(string productId)
         {
-            var spyTask = WebSocketFeed.SubscribeToTickerChannel(productId).Spy(_testOutput, TimeSpan.FromSeconds(3));
+            await WebSocketFeed.Subscribe(b => b.AddTickerChannel(productId));
 
-            await WebSocketFeed.StartAsync();
-            var spy = await spyTask;
+            var spy = await WebSocketFeed.ChannelReader.Spy(_testOutput, TimeSpan.FromSeconds(3));
 
             spy.ReceivedMessages.ShouldNotBeEmpty();
             var actualMessages = spy.ReceivedMessages.OfType<TickerMessage>().ToList();
@@ -77,10 +58,8 @@ namespace LDZ.Coinbase.Test.Integration
         [InlineData("BTC-USD")]
         public async Task SubscribeToLevel2Channel(string productId)
         {
-            var spyTask = WebSocketFeed.SubscribeToLevel2Channel(productId).Spy(_testOutput, TimeSpan.FromSeconds(3));
-
-            await WebSocketFeed.StartAsync();
-            var spy = await spyTask;
+            await WebSocketFeed.Subscribe(b => b.AddLevel2Channel(productId));
+            var spy = await WebSocketFeed.ChannelReader.Spy(_testOutput, TimeSpan.FromSeconds(3));
 
             spy.ReceivedMessages.ShouldNotBeEmpty();
             var snapshotMessage = spy.ReceivedMessages.OfType<Level2SnapshotMessage>().ShouldHaveSingleItem();
@@ -91,9 +70,11 @@ namespace LDZ.Coinbase.Test.Integration
             updateMessages.ShouldContain(m => m.ProductId == productId);
         }
 
-        public Task InitializeAsync()
+        public async Task InitializeAsync()
         {
-            return Task.CompletedTask;
+            await WebSocketFeed.ConnectAsync();
+
+            _testOutput.WriteLine("Connected.");
         }
 
         public async Task DisposeAsync()

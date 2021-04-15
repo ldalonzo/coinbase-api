@@ -3,6 +3,7 @@ using System.Linq;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
+using AutoFixture.Xunit2;
 using LDZ.Coinbase.Api;
 using LDZ.Coinbase.Api.DependencyInjection;
 using LDZ.Coinbase.Api.Model.Feed;
@@ -17,55 +18,188 @@ using Xunit.Abstractions;
 
 namespace LDZ.Coinbase.Feed.Test.Unit
 {
-    public class WebSocketFeedUnitTest : IAsyncLifetime
+    public class WebSocketFeedUnitTest
     {
-        public WebSocketFeedUnitTest(ITestOutputHelper testOutput)
+        public WebSocketFeedUnitTest(ITestOutputHelper outputHelper)
         {
-            _testOutput = testOutput;
+            _outputHelper = outputHelper;
         }
 
-        private readonly ITestOutputHelper _testOutput;
-
-        private IWebSocketFeed? WebSocketFeed { get; set; }
+        private readonly ITestOutputHelper _outputHelper;
 
         [Fact]
-        public async Task SubscribeToHeartbeatChannel()
+        public async Task ConnectAsync_MissingWebsocketFeedUri()
+        {
+            var services = new ServiceCollection();
+            await using var serviceProvider = services
+                .AddCoinbaseProApi(_ => { }, c => c.Configure(r => r.WebsocketFeedUri = null))
+                .BuildServiceProvider();
+
+            var webSocketFeed = serviceProvider.GetRequiredService<IWebSocketFeed>();
+
+            var actualErrorMessage = await Should.ThrowAsync<InvalidOperationException>(() => webSocketFeed.ConnectAsync());
+            actualErrorMessage.Message.ShouldContain("Websocket Feed URL is not specified.");
+        }
+
+        [Fact]
+        public async Task ConnectAsync()
         {
             var webSocketMock = new Mock<IClientWebSocketFacade>();
-            webSocketMock.SetupReceiveAsyncSequence()
+
+            var services = new ServiceCollection();
+            await using var serviceProvider = services
+                .AddTransient(_ => webSocketMock.Object)
+                .AddCoinbaseProApi()
+                .BuildServiceProvider();
+
+            var webSocketFeed = serviceProvider.GetRequiredService<IWebSocketFeed>();
+
+            await webSocketFeed.ConnectAsync();
+
+            webSocketMock.Verify(socket => socket.ConnectAsync(
+                    It.Is<Uri>(u => u == EndpointUriNames.WebsocketFeedUri),
+                    It.IsAny<CancellationToken>()),
+                Times.Exactly(1));
+        }
+
+        [Fact]
+        public async Task ConnectAsyncThrowsWebSocketException()
+        {
+            var webSocketMock = new Mock<IClientWebSocketFacade>();
+            webSocketMock
+                .Setup(f => f.ConnectAsync(It.IsAny<Uri>(), It.IsAny<CancellationToken>()))
+                .Throws<WebSocketException>();
+
+            var services = new ServiceCollection();
+            await using var serviceProvider = services
+                .AddTransient(_ => webSocketMock.Object)
+                .AddCoinbaseProApi()
+                .BuildServiceProvider();
+
+            var webSocketFeed = serviceProvider.GetRequiredService<IWebSocketFeed>();
+
+            await Should.ThrowAsync<WebSocketException>(webSocketFeed.ConnectAsync());
+        }
+
+        [Theory]
+        [AutoData]
+        public async Task SubscribeToHeartbeatChannel(string productId)
+        {
+            var webSocketMock = new Mock<IClientWebSocketFacade>();
+            webSocketMock
+                .Setup(f => f.ReceiveAsync(It.IsAny<Memory<byte>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new ValueWebSocketReceiveResult(0, WebSocketMessageType.Text, true));
+
+            var services = new ServiceCollection();
+            await using var serviceProvider = services
+                .AddTransient(_ => webSocketMock.Object)
+                .AddCoinbaseProApi()
+                .BuildServiceProvider();
+
+            var webSocketFeed = serviceProvider.GetRequiredService<IWebSocketFeed>();
+            await webSocketFeed.Subscribe(b => b.AddHeartbeatChannel(productId));
+
+            webSocketMock.Verify(socket => socket.SendAsync(
+                    It.Is<ReadOnlyMemory<byte>>(buffer => buffer.ContainsUtf8String($"\"heartbeat\",\"product_ids\":[\"{productId}\"]")),
+                    It.Is<WebSocketMessageType>(t => t == WebSocketMessageType.Text),
+                    It.Is<bool>(b => b), It.IsAny<CancellationToken>()),
+                Times.Exactly(1));
+        }
+
+        [Theory]
+        [AutoData]
+        public async Task SubscribeToTickerChannel(string productId)
+        {
+            var webSocketMock = new Mock<IClientWebSocketFacade>();
+            webSocketMock
+                .Setup(f => f.ReceiveAsync(It.IsAny<Memory<byte>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new ValueWebSocketReceiveResult(0, WebSocketMessageType.Text, true));
+
+            var services = new ServiceCollection();
+            await using var serviceProvider = services
+                .AddTransient(_ => webSocketMock.Object)
+                .AddCoinbaseProApi()
+                .BuildServiceProvider();
+
+            var webSocketFeed = serviceProvider.GetRequiredService<IWebSocketFeed>();
+            await webSocketFeed.Subscribe(b => b.AddTickerChannel(productId));
+
+            webSocketMock.Verify(socket => socket.SendAsync(
+                    It.Is<ReadOnlyMemory<byte>>(buffer => buffer.ContainsUtf8String($"\"ticker\",\"product_ids\":[\"{productId}\"]")),
+                    It.Is<WebSocketMessageType>(t => t == WebSocketMessageType.Text),
+                    It.Is<bool>(j => j), It.IsAny<CancellationToken>()),
+                Times.Exactly(1));
+        }
+
+        [Theory]
+        [AutoData]
+        public async Task SubscribeToLevel2Channel(string productId)
+        {
+            var webSocketMock = new Mock<IClientWebSocketFacade>();
+            webSocketMock
+                .Setup(f => f.ReceiveAsync(It.IsAny<Memory<byte>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new ValueWebSocketReceiveResult(0, WebSocketMessageType.Text, true));
+
+            var services = new ServiceCollection();
+            await using var serviceProvider = services
+                .AddTransient(_ => webSocketMock.Object)
+                .AddCoinbaseProApi()
+                .BuildServiceProvider();
+
+            var webSocketFeed = serviceProvider.GetRequiredService<IWebSocketFeed>();
+            await webSocketFeed.Subscribe(b => b.AddLevel2Channel(productId));
+
+            webSocketMock.Verify(socket => socket.SendAsync(
+                    It.Is<ReadOnlyMemory<byte>>(buffer => buffer.ContainsUtf8String($"\"level2\",\"product_ids\":[\"{productId}\"]")),
+                    It.Is<WebSocketMessageType>(t => t == WebSocketMessageType.Text),
+                    It.Is<bool>(j => j), It.IsAny<CancellationToken>()),
+                Times.Exactly(1));
+        }
+
+        [Fact]
+        public async Task ReceiveHeartbeatMessages()
+        {
+            var webSocketMock = new Mock<IClientWebSocketFacade>();
+            webSocketMock
+                .SetupReceiveAsyncSequence()
                 .Returns("TestData/message_BTC-USD_heartbeat.json");
 
-            WebSocketFeed = CreateWebSocketFeed(webSocketMock);
+            var services = new ServiceCollection();
+            await using var serviceProvider = services
+                .AddTransient(_ => webSocketMock.Object)
+                .AddCoinbaseProApi()
+                .BuildServiceProvider();
 
-            var spyTask = WebSocketFeed.SubscribeToHeartbeatChannel("BTC-USD").Spy(_testOutput, TimeSpan.FromMilliseconds(100));
-            await WebSocketFeed.StartAsync();
-
-            var spy = await spyTask;
-            webSocketMock.Verify(socket => socket.ConnectAsync(It.Is<Uri>(u => u == EndpointUriNames.WebsocketFeedUri), It.IsAny<CancellationToken>()), Times.Exactly(1));
-            webSocketMock.Verify(socket => socket.SendAsync(It.Is<ReadOnlyMemory<byte>>(buffer => buffer.ContainsUtf8String("\"heartbeat\",\"product_ids\":[\"BTC-USD\"]") ), It.Is<WebSocketMessageType>(t => t == WebSocketMessageType.Text), It.Is<bool>(b => b), It.IsAny<CancellationToken>()), Times.Exactly(1));
-
+            var webSocketFeed = serviceProvider.GetRequiredService<IWebSocketFeed>();
+            await webSocketFeed.Subscribe(_ => { });
+            
+            var spy = await webSocketFeed.ChannelReader.Spy(_outputHelper, TimeSpan.FromMilliseconds(100));
             spy.ReceivedMessages.OfType<HeartbeatMessage>().ShouldNotBeEmpty();
         }
 
         [Fact]
-        public async Task SubscribeToTickerChannel()
+        public async Task ReceiveTickerMessages()
         {
             var webSocketMock = new Mock<IClientWebSocketFacade>();
-            webSocketMock.SetupReceiveAsyncSequence()
+            webSocketMock
+                .SetupReceiveAsyncSequence()
                 .Returns("TestData/message_ETH-EUR_ticker.json");
 
-            WebSocketFeed = CreateWebSocketFeed(webSocketMock);
-            var spyTask = WebSocketFeed.SubscribeToTickerChannel("ETH-EUR").Spy(_testOutput, TimeSpan.FromMilliseconds(100));
-            await WebSocketFeed.StartAsync();
+            var services = new ServiceCollection();
+            await using var serviceProvider = services
+                .AddTransient(_ => webSocketMock.Object)
+                .AddCoinbaseProApi()
+                .BuildServiceProvider();
 
-            var spy = await spyTask;
-            webSocketMock.Verify(socket => socket.ConnectAsync(It.Is<Uri>(u => u == EndpointUriNames.WebsocketFeedUri), It.IsAny<CancellationToken>()), Times.Exactly(1));
-            webSocketMock.Verify(socket => socket.SendAsync(It.Is<ReadOnlyMemory<byte>>(buffer => buffer.ContainsUtf8String("\"ticker\",\"product_ids\":[\"ETH-EUR\"]")), It.Is<WebSocketMessageType>(t => t == WebSocketMessageType.Text), It.Is<bool>(j => j), It.IsAny<CancellationToken>()), Times.Exactly(1));
-            spy.ReceivedMessages.OfType<TickerMessage>().ShouldHaveSingleItem();
+            var webSocketFeed = serviceProvider.GetRequiredService<IWebSocketFeed>();
+            await webSocketFeed.Subscribe(_ => { });
+
+            var spy = await webSocketFeed.ChannelReader.Spy(_outputHelper, TimeSpan.FromMilliseconds(100));
+            spy.ReceivedMessages.OfType<TickerMessage>().ShouldNotBeEmpty();
         }
 
         [Fact]
-        public async Task SubscribeToLevel2Channel()
+        public async Task ReceiveLevel2Messages()
         {
             var webSocketMock = new Mock<IClientWebSocketFacade>();
             webSocketMock
@@ -74,42 +208,18 @@ namespace LDZ.Coinbase.Feed.Test.Unit
                 .Returns("TestData/message_XTZ-EUR_l2update_buy.json")
                 .Returns("TestData/message_XTZ-EUR_l2update_sell.json");
 
-            WebSocketFeed = CreateWebSocketFeed(webSocketMock);
-
-            var spyTask = WebSocketFeed.SubscribeToLevel2Channel("XTZ-EUR").Spy(_testOutput, TimeSpan.FromMilliseconds(100));
-            await WebSocketFeed.StartAsync();
-
-            var spy = await spyTask;
-            webSocketMock.Verify(socket => socket.ConnectAsync(It.Is<Uri>(u => u == EndpointUriNames.WebsocketFeedUri), It.IsAny<CancellationToken>()), Times.Exactly(1));
-            webSocketMock.Verify(socket => socket.SendAsync(It.Is<ReadOnlyMemory<byte>>(buffer => buffer.ContainsUtf8String("\"level2\",\"product_ids\":[\"XTZ-EUR\"]")), It.Is<WebSocketMessageType>(t => t == WebSocketMessageType.Text), It.Is<bool>(j => j), It.IsAny<CancellationToken>()), Times.Exactly(1));
-            spy.ReceivedMessages.OfType<Level2SnapshotMessage>().ShouldHaveSingleItem();
-            spy.ReceivedMessages.OfType<Level2UpdateMessage>().ShouldNotBeEmpty();
-        }
-
-        private static IWebSocketFeed CreateWebSocketFeed(IMock<IClientWebSocketFacade> webSocketMock)
-        {
             var services = new ServiceCollection();
-
-            var serviceProvider = services
-                .AddLogging()
+            await using var serviceProvider = services
                 .AddTransient(_ => webSocketMock.Object)
                 .AddCoinbaseProApi()
                 .BuildServiceProvider();
 
-            return serviceProvider.GetRequiredService<IWebSocketFeed>();
-        }
+            var webSocketFeed = serviceProvider.GetRequiredService<IWebSocketFeed>();
+            await webSocketFeed.Subscribe(_ => { });
 
-        public Task InitializeAsync()
-        {
-            return Task.CompletedTask;
-        }
-
-        public async Task DisposeAsync()
-        {
-            if (WebSocketFeed != null)
-            {
-                await WebSocketFeed.StopAsync();
-            }
+            var spy = await webSocketFeed.ChannelReader.Spy(_outputHelper, TimeSpan.FromMilliseconds(100));
+            spy.ReceivedMessages.OfType<Level2SnapshotMessage>().ShouldHaveSingleItem();
+            spy.ReceivedMessages.OfType<Level2UpdateMessage>().ShouldNotBeEmpty();
         }
     }
 }

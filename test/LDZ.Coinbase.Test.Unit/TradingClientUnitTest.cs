@@ -13,8 +13,10 @@ using Xunit;
 
 namespace LDZ.Coinbase.Test.Unit
 {
-    public class TradingClientUnitTest
+    public class TradingClientUnitTest : IAsyncLifetime
     {
+        private ServiceProvider? ServiceProvider { get; set; }
+
         [Fact]
         public async Task PlaceNewOrder()
         {
@@ -147,6 +149,23 @@ namespace LDZ.Coinbase.Test.Unit
         }
 
         private ITradingClient CreateTradingClient(MockHttpMessageHandler mockHttp)
-            => new ServiceCollection().CreateClient<ITradingClient>(mockHttp);
+        {
+            ServiceProvider = new ServiceCollection().AddCoinbaseProApi(mockHttp).BuildServiceProvider();
+
+            return ServiceProvider.GetRequiredService<ITradingClient>();
+        }
+
+        public Task InitializeAsync()
+        {
+            return Task.CompletedTask;
+        }
+
+        public async Task DisposeAsync()
+        {
+            if (ServiceProvider != null)
+            {
+                await ServiceProvider.DisposeAsync();
+            }
+        }
     }
 }

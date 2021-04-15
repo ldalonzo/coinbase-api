@@ -14,8 +14,10 @@ using Xunit;
 
 namespace LDZ.Coinbase.Test.Unit
 {
-    public class MarketDataUnitTest
+    public class MarketDataUnitTest : IAsyncLifetime
     {
+        private ServiceProvider? ServiceProvider { get; set; }
+
         [Fact]
         public async Task GetProducts()
         {
@@ -156,7 +158,24 @@ namespace LDZ.Coinbase.Test.Unit
             actual.Iso.ShouldBe(DateTime.Parse("2015-01-07T23:47:25.201Z"));
         }
 
-        private static IMarketDataClient CreateMarketDataClient(MockHttpMessageHandler mockHttp)
-            => new ServiceCollection().CreateClient<IMarketDataClient>(mockHttp);
+        private IMarketDataClient CreateMarketDataClient(MockHttpMessageHandler mockHttp)
+        {
+            ServiceProvider = new ServiceCollection().AddCoinbaseProApi(mockHttp).BuildServiceProvider();
+
+            return ServiceProvider.GetRequiredService<IMarketDataClient>();
+        }
+
+        public Task InitializeAsync()
+        {
+            return Task.CompletedTask;
+        }
+
+        public async Task DisposeAsync()
+        {
+            if (ServiceProvider != null)
+            {
+                await ServiceProvider.DisposeAsync();
+            }
+        }
     }
 }
